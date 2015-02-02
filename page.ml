@@ -28,14 +28,17 @@ let content ca_root =
     ~href:("https://blockchain.info/address/" ^ btc_address)
     <:html< <tt>$Html.html_of_string btc_address$</tt> >>
   and a_mirage = link ~href:"http://openmirage.org" <:html<Mirage>>
-  and a_pinata = link ~href:"https://github.com/mirleft/btc-piñata" <:html<BTC Piñata>>
+  and a_pinata = link ~href:"https://github.com/mirleft/btc-pinata" <:html<BTC Piñata>>
   and a_tls    = link ~href:"https://github.com/mirleft/ocaml-tls" <:html<TLS>>
   and a_x509   = link ~href:"https://github.com/mirleft/ocaml-x509" <:html<X.509>>
   and a_path_val = link
     ~href:"https://tools.ietf.org/html/rfc5280#page-71"
-    <:html<path validation>> in
-  let ca = Html.html_of_string (Cstruct.to_string ca_root) in
-  let ca = <:html< <pre>$ca$</pre> >>
+    <:html<path validation>>
+  and a_ipredator = link ~href:"https://www.ipredator.se" <:html<IPredator>>
+  in
+  let ca = <:html<
+    <pre>$Html.html_of_string (Cstruct.to_string ca_root)$</pre>
+  >>
   in
   <:html<
 
@@ -63,18 +66,21 @@ let content ca_root =
       </li>
     </ul>
 
-    <p>And here's the kicker: in both client and server role, piñata requires
-    the other end to present a certificate. Authentication is performed using
-    standard $a_path_val$, but allowing only one certificate as the trust
+    <p>And here's the kicker: in both the client and server roles, piñata
+    requires the other end to present a certificate. Authentication is performed
+    using standard $a_path_val$, but allowing only one certificate as the trust
     anchor. And no, you can't have its key.</p>
 
-    <p>It follows that it should be impossible to successfully establish a
-    TLS connection as long as piñata is working properly: to get the spoils, you
+    <p>It follows that it should be impossible to successfully establish a TLS
+    connection as long as piñata is working properly. To get the spoils, you
     have to smash it.</p>
 
-    <p>$a_pinata$ is a $a_mirage$ unikernel. It is written in OCaml, runs
+    <p>$a_pinata$ is a $a_mirage$ unikernel. It was written in OCaml, runs
     directly on Xen, and is using native OCaml $a_tls$ and $a_x509$
     implementations.</p>
+
+    <p>Bitcoins and the hosting for this challenge are sponsored by the great
+    people over at $a_ipredator$. Do check them out if you need a VPN!</p>
 
     <p>This is the CA:</p>
     $ca$
