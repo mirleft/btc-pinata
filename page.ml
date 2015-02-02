@@ -21,7 +21,7 @@ let wrap_body ~title ~body =
     </html>
   >>
 
-let link ~href child = [ Html.link ~href:(Uri.of_string href) child ]
+let link ~href child = [ Html.a ~href:(Uri.of_string href) child ]
 
 let content ca_root =
   let a_chain = link
