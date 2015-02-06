@@ -11,10 +11,21 @@ let wrap_body ~title ~body =
           body {
             font-family: sans-serif;
             color: #333;
-            margin: 5%;
           }
-          a { color: #333; }
-          a:visited { color: #333; }
+          #content {
+            margin: 10% 0 10% 15%;
+            width: 45%;
+          }
+          h3 { text-shadow: 1px 1px #ccc; }
+          a, a:visited { color: #333; }
+          #logo {
+            z-index: -1;
+            opacity: 0.9;
+            position: fixed;
+            width: 40%;
+            top: 0;
+            right: 0;
+          }
         </style>
       </head>
       <body>$body$</body>
@@ -26,7 +37,7 @@ let link ~href child = [ Html.a ~href:(Uri.of_string href) child ]
 let content ca_root =
   let a_chain = link
     ~href:("https://blockchain.info/address/" ^ btc_address)
-    <:html< <tt>$Html.html_of_string btc_address$</tt> >>
+    <:html<$Html.html_of_string btc_address$>>
   and a_mirage = link ~href:"http://openmirage.org" <:html<Mirage>>
   and a_pinata = link ~href:"https://github.com/mirleft/btc-pinata" <:html<BTC Piñata>>
   and a_tls    = link ~href:"https://github.com/mirleft/ocaml-tls" <:html<TLS>>
@@ -42,7 +53,7 @@ let content ca_root =
   in
   <:html<
 
-    <svg id="logo" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 364 364" xml:space="preserve" height="512px" viewBox="0 0 364 364" width="512px" version="1.1" y="0px" x="0px" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/">
+    <svg id="logo" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 364 364" xml:space="preserve" viewBox="0 0 364 364" version="1.1" y="0px" x="0px" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/">
       <g stroke="#000" stroke-miterlimit="10" fill="#fff">
         <path stroke-linejoin="round" d="m125.29 212.04-75.584 7.664 66.914-37.523c-0.599-7.652-0.062-15.523 1.758-23.398 3.68-15.921 12.059-29.525 23.316-39.723l-17.053-56.102 44.406 40.066-0.018 0.012c8.447-2.836 17.454-4.229 26.662-3.955l32.709-58.913-2.154 66.195c14.354 6.723 25.964 17.595 33.701 30.774l-0.046-0.116 54.511-5.706-45.61 28.354-0.012-0.028c2.381 10.829 2.462 22.341-0.202 33.862-3.092 13.379-9.508 25.117-18.154 34.58 0.02 0.03 0.031 0.051 0.031 0.051l22.76 72.487-51.25-51.361s-0.339-0.435-0.699-1.213c-9.997 3.875-20.879 5.68-32.012 5.056l-26.145 54.399 0.379-60.355c-16.772-7.06-30.074-19.671-38.208-35.107z" stroke-width="40"/>
         <g stroke-dasharray="4">
@@ -62,48 +73,53 @@ let content ca_root =
       </g>
     </svg>
 
-    <p><b>You have reached the BTC Piñata.</b></p>
+    <div id="content">
 
-    <p>BTC Piñata knows the private key to the bitcoin address $a_chain$.
-    If you break the piñata, you get to keep what's inside.</p>
+      <h3>You have reached the BTC Piñata</h3>
 
-    <p>Here are the rules of the game:</p>
+      <p>BTC Piñata knows the private key to the bitcoin address $a_chain$.
+      If you break the piñata, you get to keep what's inside.</p>
 
-    <ul>
-      <li>
-        <p>You can connect to the port 30001 using TLS. Piñata will send the
-        key and hang up.</p>
-      </li>
-      <li>
-        <p>You can connect to the port 30002 using TCP. Piñata will immediately
-        close the connection and connect back over TLS to port 40001 on the
-        initiating host, send the key, and hang up.</p>
-      </li>
-      <li>
-        <p>You can connect to the port 30003 using TCP. Piñata will initiate a
-        TLS handshake over that channel serving as a client, send the key over
-        TLS, and hang up.</p>
-      </li>
-    </ul>
+      <p>Here are the rules of the game:</p>
 
-    <p>And here's the kicker: in both the client and server roles, piñata
-    requires the other end to present a certificate. Authentication is performed
-    using standard $a_path_val$, but allowing only one certificate as the trust
-    anchor. And no, you can't have its key.</p>
+      <ul>
+        <li>
+          <p>You can connect to the port 10000 using TLS. Piñata will send the
+          key and hang up.</p>
+        </li>
+        <li>
+          <p>You can connect to the port 10001 using TCP. Piñata will immediately
+          close the connection and connect back over TLS to port 40001 on the
+          initiating host, send the key, and hang up.</p>
+        </li>
+        <li>
+          <p>You can connect to the port 10002 using TCP. Piñata will initiate a
+          TLS handshake over that channel serving as a client, send the key over
+          TLS, and hang up.</p>
+        </li>
+      </ul>
 
-    <p>It follows that it should be impossible to successfully establish a TLS
-    connection as long as piñata is working properly. To get the spoils, you
-    have to smash it.</p>
+      <p>And here's the kicker: in both the client and server roles, piñata
+      requires the other end to present a certificate. Authentication is performed
+      using standard $a_path_val$, but allowing only one certificate as the trust
+      anchor. And no, you can't have its key.</p>
 
-    <p>$a_pinata$ is a $a_mirage$ unikernel. It was written in OCaml, runs
-    directly on Xen, and is using native OCaml $a_tls$ and $a_x509$
-    implementations.</p>
+      <p>It follows that it should be impossible to successfully establish a TLS
+      connection as long as piñata is working properly. To get the spoils, you
+      have to smash it.</p>
 
-    <p>Bitcoins and the hosting for this challenge are sponsored by the great
-    people over at $a_ipredator$. Do check them out if you need a VPN!</p>
+      <p>$a_pinata$ is a $a_mirage$ unikernel. It was written in OCaml, runs
+      directly on Xen, and is using native OCaml $a_tls$ and $a_x509$
+      implementations.</p>
 
-    <p>This is the CA:</p>
-    $ca$
+      <p>Bitcoins and the hosting for this challenge are sponsored by
+      $a_ipredator$. Do check them out if you need a VPN!</p>
+
+      <p>This is the CA:</p>
+      $ca$
+
+    </div>
+
   >>
 
 let render ca_root =
