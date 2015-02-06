@@ -24,10 +24,11 @@ struct
   let tls_accept ~tag c stack cfg tcp ~f =
     let peer = TCP.get_dest tcp in
     let log  = L.log_ext tag peer in
-    TLS.server_of_flow ~trace:(L.trace peer) cfg tcp
-    >>= function
-    | `Error _ -> log "TLS failed" ; TCP.close tcp
-    | `Ok tls  -> log "TLS ok"     ; f tls >> TLS.close tls
+    L.tracing peer @@ fun trace ->
+      TLS.server_of_flow ~trace cfg tcp
+      >>= function
+      | `Error _ -> log "TLS failed" ; TCP.close tcp
+      | `Ok tls  -> log "TLS ok"     ; f tls >> TLS.close tls
 
   let tls_connect ~tag c stack cfg addr ~f =
     let log = L.log_ext tag addr in
@@ -35,10 +36,11 @@ struct
     >>= function
     | `Error _ -> log "connection failed" ; return_unit
     | `Ok tcp  ->
-        TLS.client_of_flow ~trace:(L.trace addr) cfg "" tcp
-        >>= function
-        | `Error _ -> log "TLS failed" ; TCP.close tcp
-        | `Ok tls  -> log "TLS ok"     ; f tls >> TLS.close tls
+        L.tracing addr @@ fun trace ->
+          TLS.client_of_flow ~trace cfg "" tcp
+          >>= function
+          | `Error _ -> log "TLS failed" ; TCP.close tcp
+          | `Ok tls  -> log "TLS ok"     ; f tls >> TLS.close tls
 
   let h_as_server c stack secret cfg =
     tls_accept ~tag:"server" c stack cfg
@@ -55,10 +57,11 @@ struct
     let peer = TCP.get_dest tcp in
     let log  = L.log_ext "rev-client" peer in
     log "received TCP" ;
-    TLS.client_of_flow ~trace:(L.trace peer) cfg "" tcp
-    >>= function
-    | `Error _ -> log "TLS failed" ; TCP.close tcp
-    | `Ok tls  -> log "TLS ok"     ; TLS.write tls secret >> TLS.close tls
+    L.tracing peer @@ fun trace ->
+      TLS.client_of_flow ~trace cfg "" tcp
+      >>= function
+      | `Error _ -> log "TLS failed" ; TCP.close tcp
+      | `Ok tls  -> log "TLS ok"     ; TLS.write tls secret >> TLS.close tls
 
   let http_header ~status xs = 
     let headers = List.map (fun (k, v) -> k ^ ": " ^ v) xs in
@@ -91,9 +94,9 @@ struct
     and ca_root        = KV.reads_exn kv "tls/ca-roots.crt" in
     let web_data       = Page.render ca_root in
     S.listen_tcpv4 stack ~port:8080  (h_notice con web_data) ;
-    S.listen_tcpv4 stack ~port:30001 (h_as_server con stack secret s_cfg) ;
-    S.listen_tcpv4 stack ~port:30002 (h_as_client con stack secret c_cfg) ;
-    S.listen_tcpv4 stack ~port:30003 (h_as_rev_client con stack secret c_cfg) ;
+    S.listen_tcpv4 stack ~port:10000 (h_as_server con stack secret s_cfg) ;
+    S.listen_tcpv4 stack ~port:10001 (h_as_client con stack secret c_cfg) ;
+    S.listen_tcpv4 stack ~port:10002 (h_as_rev_client con stack secret c_cfg) ;
     S.listen stack
 
 end
