@@ -14,4 +14,4 @@
 /*.xl
 
 /*-mellon
-/disk/tls/server.*
+/disk/tls/*.key
