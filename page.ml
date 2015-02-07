@@ -46,6 +46,8 @@ let content ca_root =
     ~href:"https://tools.ietf.org/html/rfc5280#page-71"
     <:html<path validation>>
   and a_ipredator = link ~href:"https://www.ipredator.se" <:html<IPredator>>
+  and a_full_list = link ~href:"https://raw.githubusercontent.com/mirleft/btc-pinata/master/opam-full.txt" <:html<full list>>
+  and a_unikernel = link ~href:"https://raw.githubusercontent.com/mirleft/btc-pinata/master/btc-pinata.xen" <:html<unikernel>>
   in
   let ca = <:html<
     <pre>$Html.html_of_string (Cstruct.to_string ca_root)$</pre>
@@ -77,8 +79,9 @@ let content ca_root =
 
       <h3>You have reached the BTC Piñata</h3>
 
-      <p>BTC Piñata knows the private key to the bitcoin address $a_chain$.
-      If you break the piñata, you get to keep what's inside.</p>
+      <p>BTC Piñata knows the private key to the 10 bitcoins of address $a_chain$.
+      If you break the piñata, you get to keep what's inside. This challenge runs
+      until mid March 2015.</p>
 
       <p>Here are the rules of the game:</p>
 
@@ -101,7 +104,7 @@ let content ca_root =
 
       <p>And here's the kicker: in both the client and server roles, piñata
       requires the other end to present a certificate. Authentication is performed
-      using standard $a_path_val$, but allowing only one certificate as the trust
+      using standard $a_path_val$ with a single certificate as trust
       anchor. And no, you can't have its key.</p>
 
       <p>It follows that it should be impossible to successfully establish a TLS
@@ -112,12 +115,18 @@ let content ca_root =
       directly on Xen, and is using native OCaml $a_tls$ and $a_x509$
       implementations.</p>
 
+      <p>The $a_full_list$ of installed software and a toy $a_unikernel$ (no secrets
+      included) are available, there is no need to use your automated tools on this
+      server - run your own instead.</p>
+
       <p>Bitcoins and the hosting for this challenge are sponsored by
-      $a_ipredator$. Do check them out if you need a VPN!</p>
+      $a_ipredator$, a friendly virtual private network provider!</p>
 
       <p>This is the CA:</p>
       $ca$
 
+      <p>If you have any results or further questions, don't hesitate to contact us
+      (contact eMail address in certificates).</p>
     </div>
 
   >>
