@@ -4,6 +4,8 @@
 /Makefile
 /main.ml
 /static*.ml*
+/main.native
+/mir-*
 
 /*.xen
 
