@@ -63,7 +63,7 @@ struct
       | `Error _ -> log "TLS failed" ; TCP.close tcp
       | `Ok tls  -> log "TLS ok"     ; TLS.write tls secret >> TLS.close tls
 
-  let http_header ~status xs = 
+  let http_header ~status xs =
     let headers = List.map (fun (k, v) -> k ^ ": " ^ v) xs in
     let lines   = status :: headers @ [ "\r\n" ] in
     Cstruct.of_string (String.concat "\r\n" lines)
