@@ -21,14 +21,19 @@ struct
 
   module L = Logger.Make (C) (S) (Clock)
 
-  let tls_accept ~tag c stack cfg tcp ~f =
+  let tls_accept ~tag ?(trace=false) c stack cfg tcp ~f =
     let peer = TCP.get_dest tcp in
     let log  = L.log_ext tag peer in
-    L.tracing peer @@ fun trace ->
-      TLS.server_of_flow ~trace cfg tcp
-      >>= function
-      | `Error _ -> log "TLS failed" ; TCP.close tcp
-      | `Ok tls  -> log "TLS ok"     ; f tls >> TLS.close tls
+    let with_tls_server k =
+      match trace with
+      | true ->
+          L.tracing peer @@ fun trace ->
+            TLS.server_of_flow ~trace cfg tcp >>= k
+      | false -> TLS.server_of_flow cfg tcp >>= k
+    in
+    with_tls_server @@ function
+    | `Error _ -> log "TLS failed" ; TCP.close tcp
+    | `Ok tls  -> log "TLS ok"     ; f tls >> TLS.close tls
 
   let tls_connect ~tag c stack cfg addr ~f =
     let log = L.log_ext tag addr in
@@ -43,7 +48,7 @@ struct
           | `Ok tls  -> log "TLS ok"     ; f tls >> TLS.close tls
 
   let h_as_server c stack secret cfg =
-    tls_accept ~tag:"server" c stack cfg
+    tls_accept ~trace:true ~tag:"server" c stack cfg
       ~f:(fun tls -> TLS.write tls secret)
 
   let h_as_client c stack secret cfg tcp =
