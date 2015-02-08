@@ -22,7 +22,7 @@ struct
     | Log   of string * float * string
     | Trace of (Ipaddr.V4.t * int) * float * Sexplib.Sexp.t
 
-  let semaphore ~n =
+  let semaphore ?(debug=false) n =
     let pending = ref 0
     and cond    = Lwt_condition.create () in
     let rec v () =
@@ -31,9 +31,13 @@ struct
     and p () = decr pending ; Lwt_condition.broadcast cond ()
     and steal () = incr pending
     in
+    let rec dbg () =
+      if !pending > 0 then Printf.printf "* logger backlog: %d\n%!" !pending ;
+      OS.Time.sleep 10. >> dbg () in
+    if debug then async dbg;
     (v, p, steal)
 
-  let (sem_v, sem_p, sem_steal) = semaphore ~n:50
+  let (sem_v, sem_p, sem_steal) = semaphore ~debug:true 100
 
   let render = function
     | Log (tag, time, msg) ->
