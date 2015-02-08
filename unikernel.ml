@@ -61,7 +61,6 @@ struct
   let h_as_rev_client c stack secret cfg tcp =
     let peer = TCP.get_dest tcp in
     let log  = L.log_ext "rev-client" peer in
-    log "received TCP" ;
     L.tracing peer @@ fun trace ->
       TLS.client_of_flow ~trace cfg "" tcp
       >>= function

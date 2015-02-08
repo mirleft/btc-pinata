@@ -110,6 +110,11 @@ let content ca_root =
       connection as long as piñata is working properly. To get the spoils, you
       have to smash it.</p>
 
+      <p>Before you ask: yes, piñata will talk to itself and you can enjoy
+      watching it do so.</p>
+
+      <br/>
+
       <p>$a_pinata$ is a $a_mirage$ unikernel. It was written in OCaml, runs
       directly on Xen, and is using native OCaml $a_tls$ and $a_x509$
       implementations.</p>
@@ -117,16 +122,19 @@ let content ca_root =
       <p>The $a_full_list$ of installed software and a toy $a_unikernel$ (no
       secrets included) are available. There is no need to use your automated
       tools on piñata - roll your own instead. This challenge runs until mid
-      March 2015.</p>
+      March 2015, or until the above address no longer contains the 10 Bitcoins
+      it started with.</p>
 
       <p>Bitcoins and the hosting for this challenge are sponsored by
       $a_ipredator$, a friendly virtual private network provider!</p>
+
+      <br/>
 
       <p>This is the CA:</p>
       $ca$
 
       <p>If you have any results or further questions, don't hesitate to contact
-      us. Address is in the certificate. </p>
+      us. Address is in the certificate.</p>
 
     </div>
 
