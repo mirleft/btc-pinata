@@ -1,0 +1,2 @@
+#!/bin/sh
+cat >> "tcp-${TCPREMOTEIP}:${TCPREMOTEPORT}.log"

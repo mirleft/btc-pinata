@@ -1,0 +1,2 @@
+#!/bin/bash
+tcpserver -H -R -v 0 12345 `dirname $0`/log-runner

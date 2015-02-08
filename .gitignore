@@ -15,3 +15,10 @@
 
 /*-mellon
 /disk/tls/server.*
+
+/logger/logger.cmi
+/logger/logger.cmx
+/logger/logger.o
+/logger/logger
+/logger/logger.xz
+
