@@ -8,7 +8,7 @@ module Make (C : CONSOLE) (S : STACKV4) (Clock : CLOCK) : sig
   val init : C.t ->  S.t -> unit
   val log : string -> unit
   val log_ext : string -> (Ipaddr.V4.t * int) -> string -> unit
-  val tracing : (Ipaddr.V4.t * int) -> ((Sexplib.Sexp.t -> unit) -> 'a Lwt.t) -> 'a Lwt.t
+  val tracing : (Ipaddr.V4.t * int) -> ((Sexplib.Sexp.t -> unit) -> unit Lwt.t) -> unit Lwt.t
 end =
 struct
 
@@ -37,7 +37,7 @@ struct
     if debug then async dbg;
     (v, p, steal)
 
-  let (sem_v, sem_p, sem_steal) = semaphore ~debug:true 100
+  let (sem_v, sem_p, sem_steal) = semaphore ~debug:true 200
 
   let render = function
     | Log (tag, time, msg) ->
@@ -84,13 +84,24 @@ struct
       sem_steal () ;
       push (Some (Log (tag, Clock.time(), msg)))
 
-  let tracing peer f =
-    let traces = ref [] in
-    sem_v () >>
-    try_lwt f (fun x -> traces := x :: !traces)
-    finally
-      let sexp = Sexplib.Sexp.List (List.rev !traces) in
-      push (Some (Trace (peer, Clock.time (), sexp))) ;
-      return_unit
+  let trace_period = 60.
 
+  let tracing peer f =
+    let traces = ref (Some []) in
+    sem_v () >>
+    try_lwt
+      OS.Time.sleep trace_period
+      <?>
+      f (fun x ->
+        match !traces with
+        | Some xs -> traces := Some (x :: xs)
+        | None    -> ())
+    finally
+      match !traces with
+      | None    -> return_unit
+      | Some xs ->
+          let sexp = Sexplib.Sexp.List (List.rev xs) in
+          traces := None ;
+          push (Some (Trace (peer, Clock.time (), sexp))) ;
+          return_unit
 end
