@@ -1,0 +1,11 @@
+#!/bin/bash
+
+set -e
+
+ocamlfind ocamlopt \
+  -linkpkg \
+  -syntax camlp4o \
+  -package lwt.syntax,lwt.unix \
+  logger.ml -o logger
+
+xz < logger > logger.xz
