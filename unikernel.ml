@@ -106,8 +106,8 @@ struct
     and secret                = KV.reads_exn kv "secret"
     and ca_root               = KV.reads_exn kv "tls/ca-roots.crt" in
     let web_data              = Page.render ca_root in
-    S.listen_tcpv4 stack ~port:8080  (h_notice con web_data) ;
-    S.listen_tcpv4 stack ~port:4433  (h_as_web_server con stack web_data w_cfg) ;
+    S.listen_tcpv4 stack ~port:80    (h_notice con web_data) ;
+    S.listen_tcpv4 stack ~port:443   (h_as_web_server con stack web_data w_cfg) ;
     S.listen_tcpv4 stack ~port:10000 (h_as_server con stack secret s_cfg) ;
     S.listen_tcpv4 stack ~port:10001 (h_as_client con stack secret c_cfg) ;
     S.listen_tcpv4 stack ~port:10002 (h_as_rev_client con stack secret c_cfg) ;
