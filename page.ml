@@ -48,6 +48,8 @@ let content ca_root =
   and a_ipredator = link ~href:"https://www.ipredator.se" <:html<IPredator>>
   and a_full_list = link ~href:"https://raw.githubusercontent.com/mirleft/btc-pinata/master/opam-full.txt" <:html<full list>>
   and a_unikernel = link ~href:"https://raw.githubusercontent.com/mirleft/btc-pinata/master/btc-pinata.xen" <:html<unikernel>>
+  and a_tls_intro = link ~href:"http://openmirage.org/blog/introducing-ocaml-tls" <:html<blogged>>
+  and a_31c3 = link ~href:"http://media.ccc.de/browse/congress/2014/31c3_-_6443_-_en_-_saal_2_-_201412271245_-_trustworthy_secure_modular_operating_system_engineering_-_hannes_-_david_kaloper.html#video" <:html<talked>>
   in
   let ca = <:html<
     <pre>$Html.html_of_string (Cstruct.to_string ca_root)$</pre>
@@ -124,6 +126,12 @@ let content ca_root =
       tools on piñata - roll your own instead. This challenge runs until mid
       March 2015, or until the above address no longer contains the 10 Bitcoins
       it started with.</p>
+
+      <p>Why we are doing this? A year ago we started to develop a TLS
+      implementation from scratch in OCaml. We even $a_tls_intro$ and $a_31c3$
+      about it. We want to boost confidence into our TLS implementation and
+      show that systems software can be written in a modular and functional
+      programming language.</p>
 
       <p>Bitcoins and the hosting for this challenge are sponsored by
       $a_ipredator$, a friendly virtual private network provider!</p>
