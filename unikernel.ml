@@ -92,11 +92,13 @@ struct
     lwt () = TLS.attach_entropy e in
     lwt authenticator    = X509.authenticator kv `CAs
     and no_authenticator = X509.authenticator kv `Noop
-    and cert             = X509.certificate kv `Default in
+    and w_cert           = X509.certificate kv (`Name "webserver")
+    and s_cert           = X509.certificate kv (`Name "server")
+    and c_cert           = X509.certificate kv (`Name "client") in
     return Tls.Config.(
-      server ~authenticator:no_authenticator ~certificates:(`Single cert) (),
-      server ~authenticator ~certificates:(`Single cert) (),
-      client ~authenticator ()
+      server ~authenticator:no_authenticator ~certificates:(`Single w_cert) (),
+      server ~authenticator ~certificates:(`Single s_cert) (),
+      client ~authenticator ~certificates:(`Single c_cert) ()
     )
 
   let start con stack kv e _ =
