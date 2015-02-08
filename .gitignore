@@ -6,7 +6,6 @@
 /static*.ml*
 /main.native
 /mir-*
-
 /*.xen
 
 /*.xml
@@ -14,11 +13,11 @@
 /*.xl
 
 /*-mellon
-/disk/tls/server.*
+
+/disk/tls/*.key
 
 /logger/logger.cmi
 /logger/logger.cmx
 /logger/logger.o
 /logger/logger
 /logger/logger.xz
-
