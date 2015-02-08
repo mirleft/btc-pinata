@@ -128,10 +128,10 @@ let content ca_root =
       it started with.</p>
 
       <p>Why we are doing this? A year ago we started to develop a TLS
-      implementation from scratch in the modular functional programming
-      language OCaml. We even $a_tls_intro$ and $a_31c3$ about it. We want
-      to boost confidence into our TLS implementation and show that systems
-      software does not need to be written in C.</p>
+      implementation from scratch in OCaml. We even $a_tls_intro$ and $a_31c3$
+      about it. We want to boost confidence into our TLS implementation and
+      show that systems software can be written in a modular and functional
+      programming language.</p>
 
       <p>Bitcoins and the hosting for this challenge are sponsored by
       $a_ipredator$, a friendly virtual private network provider!</p>
