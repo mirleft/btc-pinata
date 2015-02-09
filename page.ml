@@ -128,7 +128,7 @@ let content ca_root =
       or until the above address no longer contains the 10 bitcoins it started
       with.</p>
 
-      <p>Why we are doing this? A year ago we started to develop a TLS
+      <p>Why are we doing this? A year ago we started to develop a TLS
       implementation from scratch. You can read the $a_tls_intro$ or watch a
       $a_31c3$ about it. Now, we want to boost confidence in our TLS
       implementation and show that systems software can be written in a
