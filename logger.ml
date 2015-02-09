@@ -2,13 +2,15 @@ open Lwt
 open V1
 open V1_LWT
 
+open Sexplib
+
 let (&.) f g x = f (g x)
 
 module Make (C : CONSOLE) (S : STACKV4) (Clock : CLOCK) : sig
   val init : C.t ->  S.t -> unit
   val log : string -> unit
   val log_ext : string -> (Ipaddr.V4.t * int) -> string -> unit
-  val tracing : (Ipaddr.V4.t * int) -> ((Sexplib.Sexp.t -> unit) -> unit Lwt.t) -> unit Lwt.t
+  val tracing : (Ipaddr.V4.t * int) -> ((Sexp.t -> unit) -> unit Lwt.t) -> unit Lwt.t
 end =
 struct
 
@@ -20,7 +22,7 @@ struct
 
   type message =
     | Log   of string * float * string
-    | Trace of (Ipaddr.V4.t * int) * float * Sexplib.Sexp.t
+    | Trace of (Ipaddr.V4.t * int) * float * Sexp.t
 
   let semaphore ?(debug=false) n =
     let pending = ref 0
@@ -47,7 +49,7 @@ struct
         Cstruct.of_string @@
           Printf.sprintf "[trace] %s:%d %.04f %s\n"
             (Ipaddr.V4.to_string host) port time
-              (Sexplib.Sexp.to_string_mach sexp)
+              (Sexp.to_string_mach sexp)
 
   let (chan, push) = Lwt_stream.create ()
 
@@ -84,24 +86,39 @@ struct
       sem_steal () ;
       push (Some (Log (tag, Clock.time(), msg)))
 
-  let trace_period = 60.
+  let trace_period = 120.
+
+  let atom x = Sexp.Atom x
+  and list x = Sexp.List x
+
+  module Q = struct
+    let create () = ref (Some [])
+    let push q x =
+      match !q with
+      | None    -> ()
+      | Some xs -> q := Some (x :: xs)
+    let close q =
+      match !q with
+      | None    -> None
+      | Some xs -> q := None ; Some (List.rev xs)
+  end
 
   let tracing peer f =
-    let traces = ref (Some []) in
-    sem_v () >>
-    try_lwt
-      OS.Time.sleep trace_period
-      <?>
-      f (fun x ->
-        match !traces with
-        | Some xs -> traces := Some (x :: xs)
-        | None    -> ())
-    finally
-      match !traces with
-      | None    -> return_unit
+    let q = Q.create () in
+    sem_v ()
+    >>
+    catch
+      (fun () ->
+        ( OS.Time.sleep trace_period >|= fun () ->
+            Q.push q (atom "*TIMEOUT*") )
+        <?>
+        f (Q.push q))
+      (fun exn -> return (Q.push q (atom "*ABORTED*")))
+    >>
+    return
+    ( match Q.close q with
+      | None    -> ()
       | Some xs ->
-          let sexp = Sexplib.Sexp.List (List.rev xs) in
-          traces := None ;
-          push (Some (Trace (peer, Clock.time (), sexp))) ;
-          return_unit
+          push (Some (Trace (peer, Clock.time (), list xs))) )
+
 end
