@@ -16,7 +16,6 @@ let wrap_body ~title ~body =
             margin: 10% 0 10% 15%;
             width: 45%;
           }
-          h3 { text-shadow: 1px 1px #ccc; }
           a, a:visited { color: #333; }
           #logo {
             z-index: -1;
@@ -47,9 +46,9 @@ let content ca_root =
     <:html<path validation>>
   and a_ipredator = link ~href:"https://www.ipredator.se" <:html<IPredator>>
   and a_full_list = link ~href:"https://raw.githubusercontent.com/mirleft/btc-pinata/master/opam-full.txt" <:html<full list>>
-  and a_unikernel = link ~href:"https://raw.githubusercontent.com/mirleft/btc-pinata/master/btc-pinata.xen" <:html<unikernel>>
-  and a_tls_intro = link ~href:"http://openmirage.org/blog/introducing-ocaml-tls" <:html<blogged>>
-  and a_31c3 = link ~href:"http://media.ccc.de/browse/congress/2014/31c3_-_6443_-_en_-_saal_2_-_201412271245_-_trustworthy_secure_modular_operating_system_engineering_-_hannes_-_david_kaloper.html#video" <:html<talked>>
+  and a_unikernel = link ~href:"https://raw.githubusercontent.com/mirleft/btc-pinata/master/btc-pinata.xen" <:html<toy unikernel>>
+  and a_tls_intro = link ~href:"http://openmirage.org/blog/introducing-ocaml-tls" <:html<blog>>
+  and a_31c3 = link ~href:"http://media.ccc.de/browse/congress/2014/31c3_-_6443_-_en_-_saal_2_-_201412271245_-_trustworthy_secure_modular_operating_system_engineering_-_hannes_-_david_kaloper.html#video" <:html<talk>>
   in
   let ca = <:html<
     <pre>$Html.html_of_string (Cstruct.to_string ca_root)$</pre>
@@ -79,7 +78,9 @@ let content ca_root =
 
     <div id="content">
 
-      <h3>You have reached the BTC Piñata</h3>
+      <h3>You have reached the BTC Piñata.</h3>
+
+      <br/>
 
       <p>BTC Piñata knows the private key to the bitcoin address $a_chain$. If
       you break the piñata, you get to keep what's inside.</p>
@@ -121,28 +122,28 @@ let content ca_root =
       directly on Xen, and is using native OCaml $a_tls$ and $a_x509$
       implementations.</p>
 
-      <p>The $a_full_list$ of installed software and a toy $a_unikernel$ (no
-      secrets included) are available. There is no need to use your automated
-      tools on piñata - roll your own instead. This challenge runs until mid
-      March 2015, or until the above address no longer contains the 10 Bitcoins
-      it started with.</p>
+      <p>The $a_full_list$ of installed software and a $a_unikernel$ without
+      secrets are available. There is no need to use the old automated tools on
+      piñata - roll your own instead. This challenge runs until mid March 2015,
+      or until the above address no longer contains the 10 bitcoins it started
+      with.</p>
 
       <p>Why we are doing this? A year ago we started to develop a TLS
-      implementation from scratch in OCaml. We even $a_tls_intro$ and $a_31c3$
-      about it. We want to boost confidence into our TLS implementation and
-      show that systems software can be written in a modular and functional
-      programming language.</p>
+      implementation from scratch. You can read the $a_tls_intro$ or watch a
+      $a_31c3$ about it. Now, we want to boost confidence in our TLS
+      implementation and show that systems software can be written in a
+      functional language.</p>
 
       <p>Bitcoins and the hosting for this challenge are sponsored by
       $a_ipredator$, a friendly virtual private network provider!</p>
+
+      <p>If you have any results or further questions, don't hesitate to contact
+      us. Address is in the certificate.</p>
 
       <br/>
 
       <p>This is the CA:</p>
       $ca$
-
-      <p>If you have any results or further questions, don't hesitate to contact
-      us. Address is in the certificate.</p>
 
     </div>
 
