@@ -37,7 +37,7 @@ let content ca_root =
   let a_chain = link
     ~href:("https://blockchain.info/address/" ^ btc_address)
     <:html<$Html.html_of_string btc_address$>>
-  and a_mirage = link ~href:"http://openmirage.org" <:html<Mirage>>
+  and a_mirage = link ~href:"http://openmirage.org" <:html<MirageOS>>
   and a_pinata = link ~href:"https://github.com/mirleft/btc-pinata" <:html<BTC Piñata>>
   and a_tls    = link ~href:"https://github.com/mirleft/ocaml-tls" <:html<TLS>>
   and a_x509   = link ~href:"https://github.com/mirleft/ocaml-x509" <:html<X.509>>
@@ -47,8 +47,8 @@ let content ca_root =
   and a_ipredator = link ~href:"https://www.ipredator.se" <:html<IPredator>>
   and a_full_list = link ~href:"https://raw.githubusercontent.com/mirleft/btc-pinata/master/opam-full.txt" <:html<full list>>
   and a_unikernel = link ~href:"https://raw.githubusercontent.com/mirleft/btc-pinata/master/btc-pinata.xen" <:html<toy unikernel>>
-  and a_tls_intro = link ~href:"http://openmirage.org/blog/introducing-ocaml-tls" <:html<blog>>
-  and a_31c3 = link ~href:"http://media.ccc.de/browse/congress/2014/31c3_-_6443_-_en_-_saal_2_-_201412271245_-_trustworthy_secure_modular_operating_system_engineering_-_hannes_-_david_kaloper.html#video" <:html<talk>>
+  and a_tls_intro = link ~href:"http://openmirage.org/blog/introducing-ocaml-tls" <:html<series of blog posts>>
+  and a_31c3 = link ~href:"http://media.ccc.de/browse/congress/2014/31c3_-_6443_-_en_-_saal_2_-_201412271245_-_trustworthy_secure_modular_operating_system_engineering_-_hannes_-_david_kaloper.html#video" <:html<31c3 talk>>
   in
   let ca = <:html<
     <pre>$Html.html_of_string (Cstruct.to_string ca_root)$</pre>
@@ -78,47 +78,47 @@ let content ca_root =
 
     <div id="content">
 
-      <h3>You have reached the BTC Piñata.</h3>
+      <h3>You have reached the BTC Piñata!</h3>
 
       <br/>
 
       <p>BTC Piñata knows the private key to the bitcoin address $a_chain$. If
-      you break the piñata, you get to keep what's inside.</p>
+      you break the Piñata, you get to keep what's inside.</p>
 
       <p>Here are the rules of the game:</p>
 
       <ul>
         <li>
-          <p>You can connect to the port 10000 using TLS. Piñata will send the
+          <p>You can connect to port 10000 using TLS. Piñata will send the
           key and hang up.</p>
         </li>
         <li>
-          <p>You can connect to the port 10001 using TCP. Piñata will immediately
+          <p>You can connect to port 10001 using TCP. Piñata will immediately
           close the connection and connect back over TLS to port 40001 on the
           initiating host, send the key, and hang up.</p>
         </li>
         <li>
-          <p>You can connect to the port 10002 using TCP. Piñata will initiate a
+          <p>You can connect to port 10002 using TCP. Piñata will initiate a
           TLS handshake over that channel serving as a client, send the key over
           TLS, and hang up.</p>
         </li>
       </ul>
 
-      <p>And here's the kicker: in both the client and server roles, piñata
+      <p>And here's the kicker: in both the client and server roles, Piñata
       requires the other end to present a certificate. Authentication is performed
       using standard $a_path_val$ with a single certificate as the trust
       anchor. And no, you can't have its key.</p>
 
       <p>It follows that it should be impossible to successfully establish a TLS
-      connection as long as piñata is working properly. To get the spoils, you
-      have to smash it.</p>
+      connection as long as Piñata is working properly. To get the spoils, you
+      <strong>have to smash it</strong>.</p>
 
-      <p>Before you ask: yes, piñata will talk to itself and you can enjoy
+      <p>Before you ask: yes, Piñata will talk to itself and you can enjoy
       watching it do so.</p>
 
       <br/>
 
-      <p>$a_pinata$ is a $a_mirage$ unikernel. It was written in OCaml, runs
+      <p>$a_pinata$ is a $a_mirage$ unikernel. It is written in OCaml, runs
       directly on Xen, and is using native OCaml $a_tls$ and $a_x509$
       implementations.</p>
 
@@ -129,9 +129,9 @@ let content ca_root =
       with.</p>
 
       <p>Why we are doing this? A year ago we started to develop a TLS
-      implementation from scratch. You can read the $a_tls_intro$ or watch a
+      implementation from scratch. You can read the $a_tls_intro$ or watch our
       $a_31c3$ about it. Now, we want to boost confidence in our TLS
-      implementation and show that systems software can be written in a
+      implementation and show that robust systems software can be written in a
       functional language.</p>
 
       <p>Bitcoins and the hosting for this challenge are sponsored by
