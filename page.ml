@@ -9,14 +9,23 @@ let wrap_body ~title ~body =
         <title>$Html.html_of_string title$</title>
         <style>
           body {
-            font-family: sans-serif;
+            /* font-family: sans-serif; */
+            font-family: monospace;
             color: #333;
           }
           #content {
             margin: 10% 0 10% 15%;
             width: 45%;
+            /* line-height: 12px; */
           }
-          a, a:visited { color: #333; }
+          #content h3 {
+            font-size: 35px;
+          }
+          a, a:visited {
+            color: #333;
+            text-decoration: none;
+            font-weight: bold;
+          }
           #logo {
             z-index: -1;
             opacity: 0.9;
