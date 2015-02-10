@@ -148,6 +148,11 @@ let content ca_root =
       and provide some evidence that robust systems software can be written in a
       functional language.</p>
 
+      <p>This page is also available via https, using our certificate
+      authority (which is likely not trusted by your browser). The purpose
+      of https is to let you try whether your software can communicate
+      (without client authentication) with our TLS implementation.</p>
+
       <p>Bitcoins and the hosting for this challenge are sponsored by
       $a_ipredator$, a friendly virtual private network provider!</p>
 
