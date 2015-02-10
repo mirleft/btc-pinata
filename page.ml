@@ -58,6 +58,7 @@ let content ca_root =
   and a_unikernel = link ~href:"https://raw.githubusercontent.com/mirleft/btc-pinata/master/btc-pinata.xen" <:html<toy unikernel>>
   and a_tls_intro = link ~href:"http://openmirage.org/blog/introducing-ocaml-tls" <:html<blog posts>>
   and a_31c3 = link ~href:"http://media.ccc.de/browse/congress/2014/31c3_-_6443_-_en_-_saal_2_-_201412271245_-_trustworthy_secure_modular_operating_system_engineering_-_hannes_-_david_kaloper.html#video" <:html<31c3 talk>>
+  and a_schneier = link ~href:"https://www.schneier.com/crypto-gram/archives/1998/1215.html#contests" <:html<Schneier>>
   in
   let ca = <:html<
     <pre>$Html.html_of_string (Cstruct.to_string ca_root)$</pre>
@@ -139,8 +140,12 @@ let content ca_root =
 
       <p>Why are we doing this? A year ago we started to develop a TLS
       implementation from scratch. You can read the $a_tls_intro$ or watch our
-      $a_31c3$ about it. Now, we want to boost confidence in our TLS
-      implementation and show that robust systems software can be written in a
+      $a_31c3$ about it. Beware that piñatas can only show the existence of
+      bugs, not their absence, as mentioned by $a_schneier$. Our piñata uses
+      an open source implementation of a well-known protocol, getting the bait
+      is automated (no forms required), and publicly observable in the
+      blockchain. The piñata will boost our confidence into OCaml-TLS slightly,
+      and provide some evidence that robust systems software can be written in a
       functional language.</p>
 
       <p>Bitcoins and the hosting for this challenge are sponsored by
