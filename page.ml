@@ -149,14 +149,14 @@ let content ca_root =
       system, and never prove it. We won't take home the message that we are
       "unbreakable", "correct", and especially not "secure". But we don't rely
       on obscurity and have a fully transparent implementation of a well-known
-      protocol. Our prize is publically observable in the blockchain.  If you
+      protocol. Our prize is publicly observable in the blockchain.  If you
       observe a transaction, it is taken. So if this contest attracts attention
       and we are still standing at the end of it, we will gain that extra inch of
       confidence in our work.</p>
 
       <p>This page is also available via $a_https$. It will present a
       certificate signed by the same authority that Piñata expects to sign all
-      of the incoming requests, so you browser will complain. The purpose of
+      of the incoming requests, so your browser will complain. The purpose of
       HTTPS is to allow checking of interoperability with our TLS
       implementation.</p>
 
