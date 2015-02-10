@@ -1,17 +1,19 @@
 crunch              1.3.0
-cstruct             1.5.0
 io-page             1.4.0
 lwt                 2.4.7
 mirage-clock-xen    1.0.0
 mirage-console      2.1.1
-mirage-entropy-xen  0.1.6
 mirage-net-xen      1.3.0
 mirage-types        2.2.0
-mirage-xen          2.2.1
-tcpip               2.2.1
 xen-evtchn          1.0.5
 xen-gnt             2.2.0
 xenstore            1.2.5
+asn1-combinators    0.1.1
+zarith              1.3
+nocrypto            0.3.1
+
+gmp                 6.0.0a
+ocaml               4.01.0
 
 cstruct             https://github.com/pqwy/ocaml-cstruct#pinata
 ctypes.dev          https://github.com/pqwy/ocaml-ctypes#pinata
@@ -20,3 +22,4 @@ mirage-xen          https://github.com/pqwy/mirage-platform#pinata
 tcpip               https://github.com/pqwy/mirage-tcpip#pinata
 x509                https://github.com/mirleft/ocaml-x509#pinata
 tls                 https://github.com/mirleft/ocaml-tls#pinata
+
