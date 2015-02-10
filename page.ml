@@ -55,10 +55,11 @@ let content ca_root =
     <:html<path validation>>
   and a_ipredator = link ~href:"https://www.ipredator.se" <:html<IPredator>>
   and a_full_list = link ~href:"https://raw.githubusercontent.com/mirleft/btc-pinata/master/opam-full.txt" <:html<full list>>
-  and a_unikernel = link ~href:"https://raw.githubusercontent.com/mirleft/btc-pinata/master/btc-pinata.xen" <:html<toy unikernel>>
+  and a_unikernel = link ~href:"https://raw.githubusercontent.com/mirleft/btc-pinata/master/btc-pinata.xen.xz" <:html<toy unikernel>>
   and a_tls_intro = link ~href:"http://openmirage.org/blog/introducing-ocaml-tls" <:html<blog posts>>
   and a_31c3 = link ~href:"http://media.ccc.de/browse/congress/2014/31c3_-_6443_-_en_-_saal_2_-_201412271245_-_trustworthy_secure_modular_operating_system_engineering_-_hannes_-_david_kaloper.html#video" <:html<31c3 talk>>
-  and a_schneier = link ~href:"https://www.schneier.com/crypto-gram/archives/1998/1215.html#contests" <:html<Schneier>>
+  and a_schneier = link ~href:"https://www.schneier.com/crypto-gram/archives/1998/1215.html#contests" <:html<bounties>>
+  and a_https = link ~href:"https://ownme.ipredator.se" <:html<HTTPS>>
   in
   let ca = <:html<
     <pre>$Html.html_of_string (Cstruct.to_string ca_root)$</pre>
@@ -117,7 +118,7 @@ let content ca_root =
       <p>And here's the kicker: in both the client and server roles, Piñata
       requires the other end to present a certificate. Authentication is performed
       using standard $a_path_val$ with a single certificate as the trust
-      anchor. And no, you can't have the private key of the certificate.</p>
+      anchor. And no, you can't have the certificate key.</p>
 
       <p>It follows that it should be impossible to successfully establish a TLS
       connection as long as Piñata is working properly. To get the spoils, you
@@ -134,24 +135,32 @@ let content ca_root =
 
       <p>The $a_full_list$ of installed software and a $a_unikernel$ without
       secrets are available. There is no need to use the old automated tools on
-      piñata - roll your own instead. This challenge runs until mid March 2015,
+      Piñata - roll your own instead. This challenge runs until mid March 2015,
       or until the above address no longer contains the 10 bitcoins it started
       with.</p>
 
       <p>Why are we doing this? A year ago we started to develop a TLS
       implementation from scratch. You can read the $a_tls_intro$ or watch our
-      $a_31c3$ about it. Beware that piñatas can only show the existence of
-      bugs, not their absence, as mentioned by $a_schneier$. Our piñata uses
-      an open source implementation of a well-known protocol, getting the bait
-      is automated (no forms required), and publicly observable in the
-      blockchain. The piñata will boost our confidence into OCaml-TLS slightly,
-      and provide some evidence that robust systems software can be written in a
-      functional language.</p>
+      $a_31c3$ about it. Now, we want to boost our confidence in the TLS
+      implementation we've developed and show that robust systems software can
+      be written in a functional language.</p>
 
-      <p>This page is also available via https, using our certificate
-      authority (which is likely not trusted by your browser). The purpose
-      of https is to let you try whether your software can communicate
-      (without client authentication) with our TLS implementation.</p>
+      <p>We are well aware that $a_schneier$ can only disprove the security of a
+      system, and never prove it. We won't take home the message that we are
+      "unbreakable", "correct", and especially not "secure". But we don't rely
+      on obscurity and have a fully transparent implementation of a well-known
+      protocol. Our prize is publically observable in the blockchain.  If you
+      observe a transaction, it is taken. So if this contest attracts attention
+      and we are still standing at the end of it, we will gain that extra inch of
+      confidence in our work.</p>
+
+      <p>This page is also available via $a_https$. It will present a
+      certificate signed by the same authority that Piñata expects to sign all
+      of the incoming requests, so you browser will complain. The purpose of
+      HTTPS is to allow checking of interoperability with our TLS
+      implementation.</p>
+
+      <br/>
 
       <p>Bitcoins and the hosting for this challenge are sponsored by
       $a_ipredator$, a friendly virtual private network provider!</p>
