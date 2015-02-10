@@ -116,7 +116,7 @@ let content ca_root =
       <p>And here's the kicker: in both the client and server roles, Piñata
       requires the other end to present a certificate. Authentication is performed
       using standard $a_path_val$ with a single certificate as the trust
-      anchor. And no, you can't have the certificate key.</p>
+      anchor. And no, you can't have the private key of the certificate.</p>
 
       <p>It follows that it should be impossible to successfully establish a TLS
       connection as long as Piñata is working properly. To get the spoils, you
