@@ -47,7 +47,7 @@ let content ca_root =
   and a_ipredator = link ~href:"https://www.ipredator.se" <:html<IPredator>>
   and a_full_list = link ~href:"https://raw.githubusercontent.com/mirleft/btc-pinata/master/opam-full.txt" <:html<full list>>
   and a_unikernel = link ~href:"https://raw.githubusercontent.com/mirleft/btc-pinata/master/btc-pinata.xen" <:html<toy unikernel>>
-  and a_tls_intro = link ~href:"http://openmirage.org/blog/introducing-ocaml-tls" <:html<series of blog posts>>
+  and a_tls_intro = link ~href:"http://openmirage.org/blog/introducing-ocaml-tls" <:html<blog posts>>
   and a_31c3 = link ~href:"http://media.ccc.de/browse/congress/2014/31c3_-_6443_-_en_-_saal_2_-_201412271245_-_trustworthy_secure_modular_operating_system_engineering_-_hannes_-_david_kaloper.html#video" <:html<31c3 talk>>
   in
   let ca = <:html<
@@ -78,7 +78,7 @@ let content ca_root =
 
     <div id="content">
 
-      <h3>You have reached the BTC Piñata!</h3>
+      <h3>You have reached the BTC Piñata.</h3>
 
       <br/>
 
@@ -89,8 +89,8 @@ let content ca_root =
 
       <ul>
         <li>
-          <p>You can connect to port 10000 using TLS. Piñata will send the
-          key and hang up.</p>
+          <p>You can connect to port 10000 using TLS. Piñata will send the key
+        and hang up.</p>
         </li>
         <li>
           <p>You can connect to port 10001 using TCP. Piñata will immediately
@@ -98,8 +98,8 @@ let content ca_root =
           initiating host, send the key, and hang up.</p>
         </li>
         <li>
-          <p>You can connect to port 10002 using TCP. Piñata will initiate a
-          TLS handshake over that channel serving as a client, send the key over
+          <p>You can connect to port 10002 using TCP. Piñata will initiate a TLS
+          handshake over that channel serving as a client, send the key over
           TLS, and hang up.</p>
         </li>
       </ul>
@@ -107,11 +107,11 @@ let content ca_root =
       <p>And here's the kicker: in both the client and server roles, Piñata
       requires the other end to present a certificate. Authentication is performed
       using standard $a_path_val$ with a single certificate as the trust
-      anchor. And no, you can't have its key.</p>
+      anchor. And no, you can't have the certificate key.</p>
 
       <p>It follows that it should be impossible to successfully establish a TLS
       connection as long as Piñata is working properly. To get the spoils, you
-      <strong>have to smash it</strong>.</p>
+      have to smash it.</p>
 
       <p>Before you ask: yes, Piñata will talk to itself and you can enjoy
       watching it do so.</p>
