@@ -55,7 +55,7 @@ let content ca_root =
     <:html<path validation>>
   and a_ipredator = link ~href:"https://www.ipredator.se" <:html<IPredator>>
   and a_full_list = link ~href:"https://raw.githubusercontent.com/mirleft/btc-pinata/master/opam-full.txt" <:html<full list>>
-  and a_unikernel = link ~href:"https://raw.githubusercontent.com/mirleft/btc-pinata/master/btc-pinata.xen.xz" <:html<toy unikernel>>
+  and a_unikernel = link ~href:"https://github.com/mirleft/btc-pinata/blob/master/mir-btc-pinata.xen.xz?raw=true" <:html<toy unikernel>>
   and a_tls_intro = link ~href:"http://openmirage.org/blog/introducing-ocaml-tls" <:html<blog posts>>
   and a_31c3 = link ~href:"http://media.ccc.de/browse/congress/2014/31c3_-_6443_-_en_-_saal_2_-_201412271245_-_trustworthy_secure_modular_operating_system_engineering_-_hannes_-_david_kaloper.html#video" <:html<31c3 talk>>
   and a_schneier = link ~href:"https://www.schneier.com/crypto-gram/archives/1998/1215.html#contests" <:html<bounties>>
