@@ -56,10 +56,12 @@ let content ca_root =
   and a_ipredator = link ~href:"https://www.ipredator.se" <:html<IPredator>>
   and a_full_list = link ~href:"https://raw.githubusercontent.com/mirleft/btc-pinata/master/opam-full.txt" <:html<full list>>
   and a_unikernel = link ~href:"https://raw.githubusercontent.com/mirleft/btc-pinata/master/btc-pinata.xen.xz" <:html<toy unikernel>>
-  and a_tls_intro = link ~href:"http://openmirage.org/blog/introducing-ocaml-tls" <:html<blog posts>>
   and a_31c3 = link ~href:"http://media.ccc.de/browse/congress/2014/31c3_-_6443_-_en_-_saal_2_-_201412271245_-_trustworthy_secure_modular_operating_system_engineering_-_hannes_-_david_kaloper.html#video" <:html<31c3 talk>>
   and a_schneier = link ~href:"https://www.schneier.com/crypto-gram/archives/1998/1215.html#contests" <:html<bounties>>
   and a_https = link ~href:"https://ownme.ipredator.se" <:html<HTTPS>>
+  and a_recap = link ~href:"https://mirage.io/blog/bitcoin-pinata-results" <:html<first five months of the Piñata>>
+  and a_nqsb = link ~href:"https://nqsb.io" <:html<not quite so broken>>
+  and a_not = link ~href:"https://nqsb.io" <:html<https://nqsb.io>>
   in
   let ca = <:html<
     <pre>$Html.html_of_string (Cstruct.to_string ca_root)$</pre>
@@ -129,21 +131,22 @@ let content ca_root =
 
       <br/>
 
-      <p>$a_pinata$ is a $a_mirage$ unikernel. It is written in OCaml, runs
-      directly on Xen, and is using native OCaml $a_tls$ and $a_x509$
-      implementations.</p>
+      <p>$a_pinata$ is a $a_mirage$ unikernel using $a_nqsb$ software. It is
+      written in OCaml, runs directly on Xen, and is using native OCaml $a_tls$
+      and $a_x509$ implementations.</p>
 
       <p>The $a_full_list$ of installed software and a $a_unikernel$ without
       secrets are available. There is no need to use the old automated tools on
-      Piñata - roll your own instead. This challenge runs until mid March 2015,
-      or until the above address no longer contains the 10 bitcoins it started
-      with.</p>
+      Piñata - roll your own instead. This challenge runs until the above address
+      no longer contains the 10 bitcoins it started with, or until we lose
+      interest.</p>
 
-      <p>Why are we doing this? A year ago we started to develop a TLS
-      implementation from scratch. You can read the $a_tls_intro$ or watch our
-      $a_31c3$ about it. Now, we want to boost our confidence in the TLS
-      implementation we've developed and show that robust systems software can
-      be written in a functional language.</p>
+      <p>Why are we doing this? At the beginning of 2014 we started to develop
+      a $a_nqsb$ TLS implementation from scratch. You can read more about it on
+      $a_not$ or watch our $a_31c3$ about it. Now, we want to boost our
+      confidence in the TLS implementation we've developed and show that robust
+      systems software can be written in a functional language. We recapitulated
+      the $a_recap$.</p>
 
       <p>We are well aware that $a_schneier$ can only disprove the security of a
       system, and never prove it. We won't take home the message that we are

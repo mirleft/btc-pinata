@@ -11,11 +11,11 @@ module Http = struct
 
 end
 
-module Main (C : CONSOLE) (S : STACKV4) (KV : KV_RO) (E : ENTROPY) (Clock : CLOCK) =
+module Main (C : CONSOLE) (S : STACKV4) (KV : KV_RO) (Clock : CLOCK) =
 struct
 
   module TCP  = S.TCPV4
-  module TLS  = Tls_mirage.Make (TCP) (E)
+  module TLS  = Tls_mirage.Make (TCP)
   module X509 = Tls_mirage.X509 (KV) (Clock)
   module KV   = Kv_ro_plus.Make (KV)
 
@@ -32,8 +32,8 @@ struct
       | false -> TLS.server_of_flow cfg tcp >>= k
     in
     with_tls_server @@ function
-    | `Error _ -> log "TLS failed" ; TCP.close tcp
-    | `Ok tls  -> log "TLS ok"     ; f tls >> TLS.close tls
+    | `Error _ | `Eof -> log "TLS failed" ; TCP.close tcp
+    | `Ok tls         -> log "TLS ok"     ; f tls >> TLS.close tls
 
   let tls_connect ~tag c stack cfg addr ~f =
     let log = L.log_ext tag addr in
@@ -44,8 +44,8 @@ struct
         L.tracing addr @@ fun trace ->
           TLS.client_of_flow ~trace cfg "" tcp
           >>= function
-          | `Error _ -> log "TLS failed" ; TCP.close tcp
-          | `Ok tls  -> log "TLS ok"     ; f tls >> TLS.close tls
+          | `Error _ | `Eof -> log "TLS failed" ; TCP.close tcp
+          | `Ok tls         -> log "TLS ok"     ; f tls >> TLS.close tls
 
   let h_as_server c stack secret cfg =
     tls_accept ~trace:true ~tag:"server" c stack cfg
@@ -64,8 +64,8 @@ struct
     L.tracing peer @@ fun trace ->
       TLS.client_of_flow ~trace cfg "" tcp
       >>= function
-      | `Error _ -> log "TLS failed" ; TCP.close tcp
-      | `Ok tls  -> log "TLS ok"     ; TLS.write tls secret >> TLS.close tls
+      | `Error _ | `Eof -> log "TLS failed" ; TCP.close tcp
+      | `Ok tls         -> log "TLS ok"     ; TLS.write tls secret >> TLS.close tls
 
   let http_header ~status xs =
     let headers = List.map (fun (k, v) -> k ^ ": " ^ v) xs in
@@ -87,22 +87,20 @@ struct
     tls_accept ~tag:"web-server" c stack cfg
       ~f:(fun tls -> TLS.writev tls [ header; data ] )
 
-  let tls_init e kv =
-    lwt () = TLS.attach_entropy e in
+  let tls_init kv =
     lwt authenticator    = X509.authenticator kv `CAs
-    and no_authenticator = X509.authenticator kv `Noop
     and w_cert           = X509.certificate kv (`Name "webserver")
     and s_cert           = X509.certificate kv (`Name "server")
     and c_cert           = X509.certificate kv (`Name "client") in
     return Tls.Config.(
-      server ~authenticator:no_authenticator ~certificates:(`Single w_cert) (),
+      server ~certificates:(`Single w_cert) (),
       server ~authenticator ~certificates:(`Single s_cert) (),
       client ~authenticator ~certificates:(`Single c_cert) ()
     )
 
-  let start con stack kv e _ =
+  let start con stack kv _ =
     L.init con stack ;
-    lwt (w_cfg, s_cfg, c_cfg) = tls_init e kv
+    lwt (w_cfg, s_cfg, c_cfg) = tls_init kv
     and secret                = KV.reads_exn kv "secret"
     and ca_root               = KV.reads_exn kv "tls/ca-roots.crt" in
     let web_data              = Page.render ca_root in
