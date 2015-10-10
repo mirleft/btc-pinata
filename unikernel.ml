@@ -16,7 +16,6 @@ struct
 
   module TCP  = S.TCPV4
   module TLS  = Tls_mirage.Make (TCP)
-  module X509 = Tls_mirage.X509 (KV) (Clock)
   module KV   = Kv_ro_plus.Make (KV)
 
   module L = Logger.Make (C) (S) (Clock)
@@ -87,12 +86,59 @@ struct
     tls_accept ~tag:"web-server" c stack cfg
       ~f:(fun tls -> TLS.writev tls [ header; data ] )
 
-  let tls_init kv =
-    lwt authenticator    = X509.authenticator kv `CAs
-    and w_cert           = X509.certificate kv (`Name "webserver")
-    and s_cert           = X509.certificate kv (`Name "server")
-    and c_cert           = X509.certificate kv (`Name "client") in
-    return Tls.Config.(
+  let valid days now =
+    let asn1_of_time time =
+      let tm = Clock.gmtime time in
+      {
+        Asn.Time.date = Clock.(tm.tm_year + 1900, (tm.tm_mon + 1), tm.tm_mday);
+        time = Clock.(tm.tm_hour, tm.tm_min, tm.tm_sec, 0.);
+        tz = None;
+      }
+    in
+    let seconds = days * 24 * 60 * 60 in
+    let start = asn1_of_time now in
+    let expire = asn1_of_time (now +. (float_of_int seconds)) in
+    (start, expire)
+
+  let generate_ca now () =
+    let rsa_key ?(bits = 2048) () =
+      `RSA (Nocrypto.Rsa.generate bits)
+    in
+    let valid_from, valid_until = valid 365 now
+    and cakey  = rsa_key ~bits:4096 ()
+    and caname = [`CN "BTC Pinata CA"] in
+    let cacert =
+      let req        = X509.CA.request caname cakey in
+      let extensions = [(true, `Basic_constraints (true, Some 1));
+                        (true, `Key_usage [`Key_cert_sign])]
+      in
+      X509.CA.sign req ~valid_from ~valid_until ~extensions cakey caname
+    in
+    let gen_cert name extensions =
+      let key  = rsa_key () in
+      let req  = X509.CA.request [`CN name] key in
+      let cert = X509.CA.sign req ~valid_from ~valid_until ~extensions cakey caname in
+      ([cert; cacert], match key with `RSA k -> k)
+    and extensions ?altname eku =
+      (match altname with
+       | None -> []
+       | Some n -> [(true, `Subject_alt_name [ `DNS n ])]) @
+        [(true, `Key_usage [ `Digital_signature ; `Key_encipherment ]);
+         (true, `Basic_constraints (false, None)) ;
+         (true, `Ext_key_usage [eku])]
+    in
+    (cacert,
+     gen_cert "Pinata server" (extensions `Server_auth),
+     gen_cert "Pinata client" (extensions `Client_auth),
+     gen_cert "ownme.ipredator.se" (extensions `Server_auth ~altname:"ownme.ipredator.se"))
+
+  let tls_init () =
+    let now = Clock.time () in
+    let cacert, s_cert, c_cert, w_cert = generate_ca now () in
+    let authenticator = X509.Authenticator.chain_of_trust ~time:now [cacert] in
+    let cacert = X509.Encoding.Pem.Certificate.to_pem_cstruct1 cacert in
+    Tls.Config.(
+      cacert,
       server ~certificates:(`Single w_cert) (),
       server ~authenticator ~certificates:(`Single s_cert) (),
       client ~authenticator ~certificates:(`Single c_cert) ()
@@ -100,10 +146,9 @@ struct
 
   let start con stack kv _ =
     L.init con stack ;
-    lwt (w_cfg, s_cfg, c_cfg) = tls_init kv
-    and secret                = KV.reads_exn kv "secret"
-    and ca_root               = KV.reads_exn kv "tls/ca-roots.crt" in
-    let web_data              = Page.render ca_root in
+    let (ca_root, w_cfg, s_cfg, c_cfg) = tls_init () in
+    lwt secret                         = KV.reads_exn kv "secret" in
+    let web_data                       = Page.render ca_root in
     S.listen_tcpv4 stack ~port:80    (h_notice con web_data) ;
     S.listen_tcpv4 stack ~port:443   (h_as_web_server con stack web_data w_cfg) ;
     S.listen_tcpv4 stack ~port:10000 (h_as_server con stack secret s_cfg) ;
