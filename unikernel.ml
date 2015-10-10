@@ -88,12 +88,15 @@ struct
 
   let valid days now =
     let asn1_of_time time =
-      let tm = Clock.gmtime time in
-      {
-        Asn.Time.date = Clock.(tm.tm_year + 1900, (tm.tm_mon + 1), tm.tm_mday);
-        time = Clock.(tm.tm_hour, tm.tm_min, tm.tm_sec, 0.);
-        tz = None;
-      }
+      match Ptime.of_float_s time with
+      | None -> assert false
+      | Some t ->
+         let date, ((h, m, s), _) = Ptime.to_date_time t in
+         {
+           Asn.Time.date = date ;
+           time = (h, m, s, 0.) ;
+           tz = None;
+         }
     in
     let seconds = days * 24 * 60 * 60 in
     let start = asn1_of_time now in

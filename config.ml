@@ -16,8 +16,8 @@ let net =
 let kv = crunch "disk"
 
 let () =
-  add_to_ocamlfind_libraries ["tls.mirage"; "cow"; "cow.syntax"] ;
-  add_to_opam_packages ["tls"; "cow"] ;
+  add_to_ocamlfind_libraries ["tls.mirage"; "cow"; "cow.syntax"; "ptime"] ;
+  add_to_opam_packages ["tls"; "cow"; "ptime"] ;
   register "btc-piñata" [
     foreign "Unikernel.Main"
       ( console @-> stackv4 @-> kv_ro @-> clock @-> job )
