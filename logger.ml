@@ -6,8 +6,8 @@ open Sexplib
 
 let (&.) f g x = f (g x)
 
-module Make (C : CONSOLE) (S : STACKV4) (Clock : CLOCK) : sig
-  val init : C.t ->  S.t -> unit
+module Make (S : STACKV4) (Clock : CLOCK) : sig
+  val init : S.t -> unit
   val log : string -> unit
   val log_ext : string -> (Ipaddr.V4.t * int) -> string -> unit
   val tracing : (Ipaddr.V4.t * int) -> ((Sexp.t -> unit) -> unit Lwt.t) -> unit Lwt.t
@@ -18,7 +18,6 @@ struct
 
   let log_ip      = Ipaddr.V4.of_string_exn "10.0.0.1"
   and log_port    = 12345
-  and source_port = 12345
 
   type message =
     | Log   of string * float * string
@@ -29,13 +28,13 @@ struct
     and cond    = Lwt_condition.create () in
     let rec v () =
       if !pending < n then (incr pending ; return_unit)
-      else Lwt_condition.wait cond >> v ()
+      else Lwt_condition.wait cond >>= v
     and p () = decr pending ; Lwt_condition.broadcast cond ()
     and steal () = incr pending
     in
     let rec dbg () =
       if !pending > 0 then Printf.printf "* logger backlog: %d\n%!" !pending ;
-      OS.Time.sleep 10. >> dbg () in
+      OS.Time.sleep 10. >>= dbg in
     if debug then async dbg;
     (v, p, steal)
 
@@ -53,18 +52,18 @@ struct
 
   let (chan, push) = Lwt_stream.create ()
 
-(*   let init _ s =
+(*   let init s =
     let udp = S.(udpv4 s) in
     async @@ fun () ->
       chan |> Lwt_stream.iter_s @@ fun msg ->
         S.UDPV4.write ~dest_ip:log_ip ~dest_port:log_port ~source_port udp
           (Cstruct.of_string (render msg)) *)
 
-  let init c s =
+  let init s =
     let t = S.(tcpv4 s) in
     let rec send cs = function
       | `Disconnected n ->
-          OS.Time.sleep n >>
+          OS.Time.sleep n >>= fun () ->
           TCP.create_connection t (log_ip, log_port) >>= (function
             | `Ok tcp  -> send cs (`Connected tcp)
             | `Error _ -> send cs (`Disconnected (n *. 2.)))
@@ -105,16 +104,15 @@ struct
 
   let tracing peer f =
     let q = Q.create () in
-    sem_v ()
-    >>
+    sem_v () >>= fun () ->
     catch
       (fun () ->
         ( OS.Time.sleep trace_period >|= fun () ->
             Q.push q (atom "*TIMEOUT*") )
         <?>
         f (Q.push q))
-      (fun exn -> return (Q.push q (atom "*ABORTED*")))
-    >>
+      (fun _ -> return (Q.push q (atom "*ABORTED*")))
+    >>= fun () ->
     return
     ( match Q.close q with
       | None    -> ()

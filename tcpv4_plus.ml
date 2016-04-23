@@ -1,5 +1,4 @@
 open Lwt
-open V1
 open V1_LWT
 
 module Make (TCP : TCPV4) : sig
@@ -16,6 +15,6 @@ and  type flow  = TCP.flow
   let write_to ~timeout flow cs =
     let write = TCP.write flow cs >|= function
       | `Ok () | `Error _ | `Eof as r -> r in
-    pick [ write ; OS.Time.sleep timeout >> return `Timeout ]
+    pick [ write ; OS.Time.sleep timeout >>= fun () -> return `Timeout ]
 
 end

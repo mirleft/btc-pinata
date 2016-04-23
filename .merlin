@@ -1,0 +1,10 @@
+B _build/**
+
+PKG cstruct
+PKG lwt
+PKG tls
+PKG tls.mirage
+PKG tyxml
+PKG tcpip
+PKG mirage
+PKG ptime

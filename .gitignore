@@ -4,6 +4,7 @@
 /Makefile
 /main.ml
 /static*.ml*
+/key_gen.ml
 /main.native
 /mir-*
 /*.xen
@@ -11,10 +12,11 @@
 /*.xml
 /*.xe
 /*.xl
+/*.xl.in
 
 /*-mellon
 
-/disk/tls/*.key
+/tls
 
 /logger/logger.cmi
 /logger/logger.cmx

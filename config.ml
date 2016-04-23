@@ -8,21 +8,32 @@ let server = address "198.167.222.202" "255.255.255.0" "198.167.222.1"
 
 let net =
   match get_mode () with
-  | `Unix -> direct_stackv4_with_default_ipv4 default_console (netif "tap0")
+  | `Unix -> socket_stackv4 default_console [Ipaddr.V4.any]
   | `Xen  -> direct_stackv4_with_dhcp default_console tap0
 (*   | `Xen  -> direct_stackv4_with_static_ipv4 default_console tap0 server *)
 
+let secret_k =
+  let doc = Key.Arg.info ~doc:"Secret" ["s"; "secret"] in
+  Key.(create "secret" Arg.(opt string ".oO( SEKRIT )Oo." doc))
 
-let kv = crunch "disk"
+let test_k =
+  let doc = Key.Arg.info ~doc:"test mode" ["test"] in
+  Key.(create "test" Arg.(flag doc))
 
 let () =
-  add_to_ocamlfind_libraries ["tls.mirage"; "cow"; "cow.syntax"; "ptime"] ;
-  add_to_opam_packages ["tls"; "cow"; "ptime"] ;
+  let keys = Key.([ abstract secret_k ; abstract test_k ])
+  and libraries = ["tls.mirage"; "tyxml"; "ptime"]
+  and packages = ["tls"; "tyxml"; "ptime"]
+  in
   register "btc-piñata" [
-    foreign "Unikernel.Main"
-      ( console @-> stackv4 @-> kv_ro @-> clock @-> job )
-      $ default_console
+    foreign
+      ~libraries
+      ~deps:[abstract nocrypto]
+      ~keys
+      ~packages
+      "Unikernel.Main"
+      ( stackv4 @-> kv_ro @-> clock @-> job )
       $ net
-      $ kv
+      $ crunch "tls"
       $ default_clock
   ]

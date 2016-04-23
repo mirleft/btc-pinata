@@ -22,5 +22,5 @@ ocaml               4.02.3
 
 ptime               http://erratique.ch/repos/ptime.git at af15659efabe905a12b45fc2626f9687f8540aeb
 
-x509                https://github.com/mirleft/ocaml-x509#pinata2
+x509                https://github.com/mirleft/ocaml-x509#pinata
 
