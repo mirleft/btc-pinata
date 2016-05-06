@@ -65,7 +65,8 @@ struct
 
   let header = http_header
       ~status:"HTTP/1.1 200 OK"
-      [ ("content-type", "text/html; charset=UTF-8") ]
+      [ ("Content-Type", "text/html; charset=UTF-8") ;
+        ("Connection", "close") ]
 
   let h_notice data tcp =
     let log = L.log_ext "web" (TCP.get_dest tcp) in
