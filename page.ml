@@ -1,17 +1,5 @@
 open Html5.M
 
-module StringPrinter = struct
-    type out = string
-    type m = string
-
-    let empty = ""
-    let concat = (^)
-    let put a = a
-    let make a = a
-end
-
-module StringHtml = Html5.Make_printer(StringPrinter)
-
 let btc_address = "183XuXTTgnfYfKcHbJ4sZeF46a49Fnihdh"
 
 let header title =
@@ -120,7 +108,9 @@ let logo =
     </svg>|___}
 
 let render ca_root =
-  Cstruct.of_string @@ StringHtml.print @@
+  let buf = Buffer.create 500 in
+  Html5.P.print ~output:(Buffer.add_string buf) @@
   html
     (header "BTC Piñata")
-    (body [Unsafe.data logo ; content ca_root])
+    (body [Unsafe.data logo ; content ca_root]) ;
+  Cstruct.of_string @@ Buffer.contents buf
