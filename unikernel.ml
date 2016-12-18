@@ -1,62 +1,57 @@
 open Lwt
-open V1
 open V1_LWT
 
-module Main (S : STACKV4) (KEYS : KV_RO) (CLOCK : CLOCK) =
+module Main (C : CONSOLE) (S : STACKV4) (KEYS : KV_RO) (CLOCK : PCLOCK) =
 struct
 
-  module TCP   = S.TCPV4
-  module TLS   = Tls_mirage.Make (TCP)
-  module MX509 = Tls_mirage.X509 (KEYS) (CLOCK)
-  module L     = Logger.Make (S) (CLOCK)
+  module TCP    = S.TCPV4
+  module TLS    = Tls_mirage.Make (TCP)
+  module MX509  = Tls_mirage.X509 (KEYS) (CLOCK)
+  module UDPLOG = Logs_syslog_mirage.Udp(C)(CLOCK)(S.UDPV4)
+
+  let log tag (ip, port) msg =
+    Logs.info (fun m -> m "%s %s:%d %s" tag (Ipaddr.V4.to_string ip) port msg)
 
   let tls_accept ~tag ?(trace=false) cfg tcp ~f =
-    let peer = TCP.get_dest tcp in
-    let log  = L.log_ext tag peer in
+    let log  = log tag (TCP.dst tcp) in
     let with_tls_server k =
       match trace with
       | true ->
-          L.tracing peer @@ fun trace ->
-            TLS.server_of_flow ~trace cfg tcp >>= k
+        let trace s = log (Sexplib.Sexp.to_string s) in
+        TLS.server_of_flow ~trace cfg tcp >>= k
       | false -> TLS.server_of_flow cfg tcp >>= k
     in
     with_tls_server @@ function
-    | `Error e -> log ("TLS failed: " ^ TLS.error_message e) ; TCP.close tcp
-    | `Eof -> log "TLS eof" ; TCP.close tcp
-    | `Ok tls -> log "TLS ok" ; f tls >>= fun _ -> TLS.close tls
+    | Error _ -> log "TLS failed" ; TCP.close tcp
+    | Ok tls -> log "TLS ok" ; f tls >>= fun _ -> TLS.close tls
 
   let tls_connect ~tag stack cfg addr ~f =
-    let log = L.log_ext tag addr in
-    TCP.create_connection (S.tcpv4 stack) addr
-    >>= function
-    | `Error _ -> log "connection failed" ; return_unit
-    | `Ok tcp  ->
-        L.tracing addr @@ fun trace ->
-          TLS.client_of_flow ~trace cfg "" tcp >>= function
-          | `Error e -> log ("TLS failed: " ^ TLS.error_message e) ; TCP.close tcp
-          | `Eof -> log "TLS eof" ; TCP.close tcp
-          | `Ok tls -> log "TLS ok" ; f tls >>= fun _ -> TLS.close tls
+    let log = log tag addr in
+    TCP.create_connection (S.tcpv4 stack) addr >>= function
+    | Error _ -> log "connection failed" ; return_unit
+    | Ok tcp  ->
+      let trace s = log (Sexplib.Sexp.to_string s) in
+      TLS.client_of_flow ~trace cfg tcp >>= function
+      | Error _ -> log "TLS failed" ; TCP.close tcp
+      | Ok tls -> log "TLS ok" ; f tls >>= fun _ -> TLS.close tls
 
   let h_as_server secret cfg =
     tls_accept ~trace:true ~tag:"server" cfg
       ~f:(fun tls -> TLS.write tls secret)
 
   let h_as_client stack secret cfg tcp =
-    let (ip, _) as addr = TCP.get_dest tcp in
-    L.log_ext "client" addr "received TCP" ;
+    let (ip, _) as addr = TCP.dst tcp in
+    log "client" addr "received TCP" ;
     TCP.close tcp >>= fun () ->
     tls_connect ~tag:"client" stack cfg (ip, 40001)
       ~f:(fun tls -> TLS.write tls secret)
 
   let h_as_rev_client secret cfg tcp =
-    let peer = TCP.get_dest tcp in
-    let log  = L.log_ext "rev-client" peer in
-    L.tracing peer @@ fun trace ->
-      TLS.client_of_flow ~trace cfg "" tcp
-      >>= function
-      | `Error e -> log ("TLS failed: " ^ TLS.error_message e) ; TCP.close tcp
-      | `Eof -> log "TLS eof" ; TCP.close tcp
-      | `Ok tls -> log "TLS ok" ; TLS.write tls secret >>= fun _ -> TLS.close tls
+    let log     = log "rev-client" (TCP.dst tcp) in
+    let trace s = log (Sexplib.Sexp.to_string s) in
+    TLS.client_of_flow ~trace cfg tcp >>= function
+    | Error _ -> log "TLS failed" ; TCP.close tcp
+    | Ok tls -> log "TLS ok" ;  TLS.write tls secret >>= fun _ -> TLS.close tls
 
   let http_header ~status xs =
     let headers = List.map (fun (k, v) -> k ^ ": " ^ v) xs in
@@ -69,10 +64,10 @@ struct
         ("Connection", "close") ]
 
   let h_notice data tcp =
-    let log = L.log_ext "web" (TCP.get_dest tcp) in
+    let log = log "web" (TCP.dst tcp) in
     TCP.writev tcp [ header; data ] >>= function
-    | `Error _ -> log "write error" ; TCP.close tcp
-    | _        -> log "responded"   ; TCP.close tcp
+    | Error _ -> log "write error" ; TCP.close tcp
+    | _       -> log "responded" ; TCP.close tcp
 
   let h_as_web_server data cfg =
     tls_accept ~tag:"web-server" cfg
@@ -80,20 +75,19 @@ struct
 
   let valid days now =
     let asn1_of_time time =
-      match Ptime.of_float_s time with
-      | None -> assert false
-      | Some t ->
-         let date, ((h, m, s), _) = Ptime.to_date_time t in
-         {
-           Asn.Time.date = date ;
-           time = (h, m, s, 0.) ;
-           tz = None;
-         }
+      let date, ((h, m, s), _) = Ptime.(to_date_time time) in
+      {
+        Asn.Time.date = date ;
+        time = (h, m, s, 0.) ;
+        tz = None;
+      }
     in
-    let seconds = days * 24 * 60 * 60 in
     let start = asn1_of_time now in
-    let expire = asn1_of_time (now +. (float_of_int seconds)) in
-    (start, expire)
+    match Ptime.(add_span now (Span.unsafe_of_d_ps (days, 0L))) with
+    | Some t ->
+      let expire = asn1_of_time t in
+      (start, expire)
+    | None -> assert false
 
   let rsa_key ?(bits = 2048) () =
     `RSA (Nocrypto.Rsa.generate bits)
@@ -126,15 +120,16 @@ struct
      gen_cert "Pinata server" (extensions `Server_auth),
      gen_cert "Pinata client" (extensions `Client_auth))
 
-  let tls_init () =
-    let now = Clock.time () in
+  let tls_init clock =
+    let now = Ptime.v (CLOCK.now_d_ps clock) in
     let cacert, s_cert, c_cert =
       if Key_gen.test () then
         generate_certs now Test.ca ()
       else
         generate_certs now (generate_ca now ()) ()
     in
-    let authenticator = X509.Authenticator.chain_of_trust ~time:now [cacert] in
+    let time = Ptime.to_float_s now in
+    let authenticator = X509.Authenticator.chain_of_trust ~time [cacert] in
     let cacert = X509.Encoding.Pem.Certificate.to_pem_cstruct1 cacert in
     Tls.Config.(
       cacert,
@@ -142,9 +137,13 @@ struct
       client ~authenticator ~certificates:(`Single c_cert) ()
     )
 
-  let start stack keys _clock _ =
-    L.init stack ;
-    let ca_root, s_cfg, c_cfg = tls_init () in
+  let start console stack keys clock _ =
+    let reporter =
+      let ip = Ipaddr.V4.of_string_exn "198.167.222.206" in
+      UDPLOG.create console clock (S.udpv4 stack) ~hostname:"ownme.ipredator.se" ip ()
+    in
+    Logs.set_reporter reporter ;
+    let ca_root, s_cfg, c_cfg = tls_init clock in
     MX509.certificate keys `Default >>= fun w_cert ->
     let w_cfg = Tls.Config.server ~certificates:(`Single w_cert) () in
     let secret = Cstruct.of_string (Key_gen.secret ()) in

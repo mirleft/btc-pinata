@@ -1,10 +1,4 @@
 B _build/**
 
-PKG cstruct
-PKG lwt
-PKG tls
-PKG tls.mirage
-PKG tyxml
-PKG tcpip
-PKG mirage
-PKG ptime
+PKG cstruct lwt tls tls.mirage tyxml tcpip mirage mirage-types
+PKG ptime logs-syslog logs-syslog.mirage x509

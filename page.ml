@@ -1,10 +1,10 @@
-open Html5.M
+open Tyxml.Html
 
 let btc_address = "183XuXTTgnfYfKcHbJ4sZeF46a49Fnihdh"
 
-let header title =
+let header t =
   head
-    (Html5.M.title (pcdata title))
+    (title (pcdata t))
     ([meta ~a:[a_charset "utf-8"] () ;
       style [pcdata
     {___|body {
@@ -109,7 +109,8 @@ let logo =
 
 let render ca_root =
   let buf = Buffer.create 500 in
-  Html5.P.print ~output:(Buffer.add_string buf) @@
+  let fmt = Format.formatter_of_buffer buf in
+  pp () fmt @@
   html
     (header "BTC Piñata")
     (body [Unsafe.data logo ; content ca_root]) ;
