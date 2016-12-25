@@ -9,7 +9,7 @@ let address =
 let net =
   if_impl Key.is_unix
     (socket_stackv4 [Ipaddr.V4.any])
-    (static_ipv4_stack ~config:address default_network)
+    (static_ipv4_stack ~config:address ~arp:farp default_network)
 
 let secret_k =
   let doc = Key.Arg.info ~doc:"Secret" ["s"; "secret"] in
@@ -19,23 +19,26 @@ let test_k =
   let doc = Key.Arg.info ~doc:"test mode" ["test"] in
   Key.(create "test" Arg.(flag doc))
 
+let logger =
+  syslog_udp
+    (syslog_config ~truncate:1484 "ownme.ipredator.se" (Ipaddr.V4.of_string_exn "198.167.222.206"))
+    net
+
 let () =
   let keys = Key.([ abstract secret_k ; abstract test_k ])
   and packages = [
     package ~sublibs:["mirage"] "tls";
     package "tyxml";
     package "logs";
-    package ~sublibs:["mirage"] "logs-syslog";
     package "ptime"]
   in
   register "btc-piñata" [
     foreign
-      ~deps:[abstract nocrypto]
+      ~deps:[abstract nocrypto; abstract logger]
       ~keys
       ~packages
       "Unikernel.Main"
-      (console @-> stackv4 @-> kv_ro @-> pclock @-> job)
-      $ default_console
+      (stackv4 @-> kv_ro @-> pclock @-> job)
       $ net
       $ crunch "tls"
       $ default_posix_clock
