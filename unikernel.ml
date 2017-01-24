@@ -1,7 +1,7 @@
 open Lwt
-open V1_LWT
+open Mirage_types_lwt
 
-module Main (S : STACKV4) (KEYS : KV_RO) (CLOCK : V1.PCLOCK) =
+module Main (S : STACKV4) (KEYS : KV_RO) (CLOCK : PCLOCK) =
 struct
 
   module TCP   = S.TCPV4
