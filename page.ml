@@ -39,7 +39,8 @@ let content ca_root =
   let a_chain = link
     ~href:("https://blockchain.info/address/" ^ btc_address)
     btc_address
-  and a_mirage = link ~href:"http://openmirage.org" "MirageOS"
+  and a_mirage = link ~href:"https://mirage.io" "MirageOS"
+  and a_solo5 = link ~href:"https://github.com/solo5/Solo5" "Solo5"
   and a_pinata = link ~href:"https://github.com/mirleft/btc-pinata" "BTC Piñata"
   and a_tls    = link ~href:"https://github.com/mirleft/ocaml-tls" "TLS"
   and a_x509   = link ~href:"https://github.com/mirleft/ocaml-x509" "X.509"
@@ -48,7 +49,7 @@ let content ca_root =
     "path validation"
   and a_ipredator = link ~href:"https://www.ipredator.se" "IPredator"
   and a_full_list = link ~href:"https://raw.githubusercontent.com/mirleft/btc-pinata/master/opam-full.txt" "full list"
-  and a_unikernel = link ~href:"https://raw.githubusercontent.com/mirleft/btc-pinata/master/btc-pinata.xen.xz" "toy unikernel"
+  and a_unikernel = link ~href:"https://raw.githubusercontent.com/mirleft/btc-pinata/master/pinata.ukvm.xz" "toy unikernel"
   and a_31c3 = link ~href:"http://media.ccc.de/browse/congress/2014/31c3_-_6443_-_en_-_saal_2_-_201412271245_-_trustworthy_secure_modular_operating_system_engineering_-_hannes_-_david_kaloper.html#video" "31c3 talk"
   and a_schneier = link ~href:"https://www.schneier.com/crypto-gram/archives/1998/1215.html#contests" "bounties"
   and a_https = link ~href:"https://ownme.ipredator.se" "HTTPS"
@@ -73,9 +74,9 @@ let content ca_root =
     p [ pcdata "It follows that it should be impossible to successfully establish a TLS connection as long as Piñata is working properly. To get the spoils, you have to smash it." ] ;
     p [ pcdata "Before you ask: yes, Piñata will talk to itself and you can enjoy watching it do so." ] ;
     br () ;
-    p [ a_pinata ; pcdata " is a " ; a_mirage ; pcdata " unikernel using " ; a_nqsb ; pcdata " software. It is written in OCaml, runs directly on Xen, and is using native OCaml " ; a_tls ; pcdata " and " ; a_x509 ; pcdata " implementations." ] ;
-    p [ pcdata "The " ; a_full_list ; pcdata " of installed software and a " ; a_unikernel ; pcdata " without secrets are available. There is no need to use the old automated tools on Piñata - roll your own instead. This challenge runs until the above address no longer contains the 10 bitcoins it started with, or until we lose interest." ] ;
-    p [ pcdata "Why are we doing this? At the beginning of 2014 we started to develop a " ; a_nqsb ; pcdata " TLS implementation from scratch. You can read more about it on " ; a_not ; pcdata " or watch our " ; a_31c3 ; pcdata " about it. Now, we want to boost our confidence in the TLS implementation we've developed and show that robust systems software can be written in a functional language. We recapitulated the " ; a_recap ; pcdata "." ] ;
+    p [ a_pinata ; pcdata " is a " ; a_mirage ; pcdata " unikernel using " ; a_nqsb ; pcdata " software. It is written in OCaml, runs directly on FreeBSD VMM (using " ; a_solo5 ; pcdata "), and is using native OCaml " ; a_tls ; pcdata " and " ; a_x509 ; pcdata " implementations." ] ;
+    p [ pcdata "The " ; a_full_list ; pcdata " of installed software and a " ; a_unikernel ; pcdata " without secrets are available. There is no need to use the old automated tools on Piñata - roll your own instead. This challenge started in February 2015, and will run until the above address no longer contains the 10 bitcoins it started with, or until we lose interest. In 2018 we will likely reuse most bitcoins for other projects." ] ;
+    p [ pcdata "Why are we doing this? At the beginning of 2014 we started to develop a " ; a_nqsb ; pcdata " TLS implementation from scratch. You can read more about it on " ; a_not ; pcdata " or watch our " ; a_31c3 ; pcdata " about it. We want to boost our confidence in the TLS implementation we've developed and show that robust systems software can be written in a functional language. We recapitulated the " ; a_recap ; pcdata "." ] ;
     p [ pcdata "We are well aware that " ; a_schneier ; pcdata " can only disprove the security of a system, and never prove it. We won't take home the message that we are 'unbreakable', 'correct', and especially not 'secure'. But we don't rely on obscurity and have a fully transparent implementation of a well-known protocol. Our prize is publicly observable in the blockchain.  If you observe a transaction, it is taken. So if this contest attracts attention and we are still standing at the end of it, we will gain that extra inch of confidence in our work." ] ;
     p [ pcdata "This page is also available via " ; a_https ; pcdata ". It will present a certificate signed by the same authority that Piñata expects to sign all of the incoming requests, so your browser will complain. The purpose of HTTPS is to allow checking of interoperability with our TLS implementation." ] ;
     br () ;

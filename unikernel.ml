@@ -81,28 +81,17 @@ struct
       ~f:(fun tls -> TLS.writev tls [ header; data ] )
 
   let valid days now =
-    let asn1_of_time time =
-      let date, ((h, m, s), _) = Ptime.(to_date_time time) in
-      {
-        Asn.Time.date = date ;
-        time = (h, m, s, 0.) ;
-        tz = None;
-      }
-    in
-    let start = asn1_of_time now in
     match Ptime.(add_span now (Span.unsafe_of_d_ps (days, 0L))) with
-    | Some t ->
-      let expire = asn1_of_time t in
-      (start, expire)
+    | Some expire -> (now, expire)
     | None -> assert false
 
-  let rsa_key ?(bits = 2048) () =
+  let rsa_key ?(bits = 4096) () =
     `RSA (Nocrypto.Rsa.generate bits)
 
   let generate_ca now () =
     let valid_from, valid_until = valid 365 now
     and cakey  = rsa_key ~bits:4096 ()
-    and caname = [`CN "BTC Pinata CA"] in
+    and caname = [`CN "BTC Piñata CA"] in
     let req        = X509.CA.request caname cakey in
     let extensions = [(true, `Basic_constraints (true, Some 1));
                       (true, `Key_usage [`Key_cert_sign])]
@@ -124,8 +113,8 @@ struct
        (true, `Ext_key_usage [eku])]
     in
     (cacert,
-     gen_cert "Pinata server" (extensions `Server_auth),
-     gen_cert "Pinata client" (extensions `Client_auth))
+     gen_cert "BTC Piñata server" (extensions `Server_auth),
+     gen_cert "BTC Piñata client" (extensions `Client_auth))
 
   let tls_init clock =
     let now = Ptime.v (CLOCK.now_d_ps clock) in
@@ -135,8 +124,7 @@ struct
       else
         generate_certs now (generate_ca now ()) ()
     in
-    let time = Ptime.to_float_s now in
-    let authenticator = X509.Authenticator.chain_of_trust ~time [cacert] in
+    let authenticator = X509.Authenticator.chain_of_trust ~time:now [cacert] in
     let cacert = X509.Encoding.Pem.Certificate.to_pem_cstruct1 cacert in
     Tls.Config.(
       cacert,
