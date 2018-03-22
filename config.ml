@@ -25,12 +25,11 @@ let () =
   in
   register "btc-piñata" [
     foreign
-      ~deps:[abstract nocrypto; abstract logger]
+      ~deps:[ abstract nocrypto ; abstract logger ; abstract app_info ]
       ~keys
       ~packages
       "Unikernel.Main"
-      (stackv4 @-> kv_ro @-> pclock @-> job)
+      (stackv4 @-> pclock @-> job)
       $ net
-      $ crunch "tls"
       $ default_posix_clock
   ]

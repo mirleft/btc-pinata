@@ -1,12 +1,11 @@
 open Lwt
 open Mirage_types_lwt
 
-module Main (S : STACKV4) (KEYS : KV_RO) (CLOCK : PCLOCK) =
+module Main (S : STACKV4) (CLOCK : PCLOCK) =
 struct
 
   module TCP   = S.TCPV4
   module TLS   = Tls_mirage.Make (TCP)
-  module MX509 = Tls_mirage.X509 (KEYS) (CLOCK)
 
   let prefix tag (ip, port) =
     Printf.sprintf "[%s] %s:%d" tag (Ipaddr.V4.to_string ip) port
@@ -64,21 +63,24 @@ struct
     let lines   = status :: headers @ [ "\r\n" ] in
     Cstruct.of_string (String.concat "\r\n" lines)
 
-  let header = http_header
+  let header len = http_header
       ~status:"HTTP/1.1 200 OK"
       [ ("Content-Type", "text/html; charset=UTF-8") ;
+        ("Content-lengt", string_of_int len) ;
         ("Connection", "close") ]
 
   let h_notice data tcp =
     let pre = prefix "web" (TCP.dst tcp) in
     let log = log pre in
-    TCP.writev tcp [ header; data ] >>= function
+    let len = Cstruct.len data in
+    TCP.writev tcp [ header len; data ] >>= function
     | Error e -> Logs.warn (fun f -> f "%s tcp error %a" pre TCP.pp_write_error e) ; TCP.close tcp
     | Ok ()   -> log "responded" ; TCP.close tcp
 
   let h_as_web_server data cfg =
+    let len = Cstruct.len data in
     tls_accept ~tag:"web-server" cfg
-      ~f:(fun tls -> TLS.writev tls [ header; data ] )
+      ~f:(fun tls -> TLS.writev tls [ header len; data ] )
 
   let valid days now =
     match Ptime.(add_span now (Span.unsafe_of_d_ps (days, 0L))) with
@@ -114,11 +116,12 @@ struct
     in
     (cacert,
      gen_cert "BTC Piñata server" (extensions `Server_auth),
-     gen_cert "BTC Piñata client" (extensions `Client_auth))
+     gen_cert "BTC Piñata client" (extensions `Client_auth),
+     gen_cert "ownme.ipredator.se" (extensions `Server_auth))
 
   let tls_init clock =
     let now = Ptime.v (CLOCK.now_d_ps clock) in
-    let cacert, s_cert, c_cert =
+    let cacert, s_cert, c_cert, w_cert =
       if Key_gen.test () then
         generate_certs now Test.ca ()
       else
@@ -129,13 +132,17 @@ struct
     Tls.Config.(
       cacert,
       server ~authenticator ~certificates:(`Single s_cert) (),
-      client ~authenticator ~certificates:(`Single c_cert) ()
+      client ~authenticator ~certificates:(`Single c_cert) (),
+      server ~certificates:(`Single w_cert) ()
     )
 
-  let start stack keys clock _ _ =
-    let ca_root, s_cfg, c_cfg = tls_init clock in
-    MX509.certificate keys `Default >>= fun w_cert ->
-    let w_cfg = Tls.Config.server ~certificates:(`Single w_cert) () in
+  let start stack clock _ _ info =
+    Logs.info (fun m -> m "used packages: %a"
+                  Fmt.(Dump.list @@ pair ~sep:(unit ".") string string)
+                  info.Mirage_info.packages) ;
+    Logs.info (fun m -> m "used libraries: %a"
+                  Fmt.(Dump.list string) info.Mirage_info.libraries) ;
+    let ca_root, s_cfg, c_cfg, w_cfg = tls_init clock in
     let secret = Cstruct.of_string (Key_gen.secret ()) in
     let web_data = Page.render ca_root in
     S.listen_tcpv4 stack ~port:80    (h_notice web_data) ;
