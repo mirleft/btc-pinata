@@ -1,9 +1,6 @@
 open Mirage
 
-let net =
-  if_impl Key.is_unix
-    (socket_stackv4 [Ipaddr.V4.any])
-    (static_ipv4_stack ~arp:farp default_network)
+let net = generic_stackv4 default_network
 
 let secret_k =
   let doc = Key.Arg.info ~doc:"Secret" ["s"; "secret"] in
