@@ -16,7 +16,9 @@ let () =
     package ~sublibs:["mirage"] "tls";
     package "tyxml";
     package "logs";
-    package "ptime"]
+    package "ptime";
+    package "monitoring-experiments";
+  ]
   in
   register "btc-piñata" [
     foreign

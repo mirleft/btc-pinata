@@ -1,62 +1,69 @@
-open Lwt
-open Mirage_types_lwt
+open Lwt.Infix
 
-module Main (S : STACKV4) (CLOCK : PCLOCK) =
+module Main (S : Mirage_stack.V4) (CLOCK : Mirage_clock.PCLOCK) =
 struct
 
   module TCP   = S.TCPV4
   module TLS   = Tls_mirage.Make (TCP)
 
-  let prefix tag (ip, port) =
-    Printf.sprintf "[%s] %s:%d" tag (Ipaddr.V4.to_string ip) port
+  let pinata_stats =
+    Monitoring_experiments.counter_metrics ~f:(fun f -> f) "pinata"
 
-  let log prefix msg =
-    Logs.info (fun m -> m "%s %s" prefix msg)
+  let trace_out tag sexp =
+    Logs.info (fun m -> m "[%s]: %s" tag (Sexplib.Sexp.to_string sexp))
 
   let tls_accept ~tag ?(trace=false) cfg tcp ~f =
-    let pre = prefix tag (TCP.dst tcp) in
-    let log = log pre in
-    let with_tls_server k =
-      match trace with
-      | true ->
-        let trace s = log (Sexplib.Sexp.to_string s) in
-        TLS.server_of_flow ~trace cfg tcp >>= k
-      | false -> TLS.server_of_flow cfg tcp >>= k
-    in
-    with_tls_server @@ function
-    | Error e -> Logs.warn (fun f -> f "%s TLS failed %a" pre TLS.pp_write_error e) ; TCP.close tcp
-    | Ok tls -> log "TLS ok" ; f tls >>= fun _ -> TLS.close tls
+    let trace = if trace then Some (trace_out tag) else None in
+    TLS.server_of_flow ?trace cfg tcp >>= function
+    | Error e ->
+      Metrics.add pinata_stats (fun x -> x) (fun d -> d (tag ^ " failed"));
+      Logs.warn (fun f -> f "[%s] TLS server failed %a" tag TLS.pp_write_error e);
+      TCP.close tcp
+    | Ok tls ->
+      Metrics.add pinata_stats (fun x -> x) (fun d -> d (tag ^ " succeeded"));
+      f tls >>= fun _ ->
+      TLS.close tls
 
   let tls_connect ~tag stack cfg addr ~f =
-    let pre = prefix tag addr in
-    let log = log pre in
     TCP.create_connection (S.tcpv4 stack) addr >>= function
-    | Error e -> Logs.warn (fun f -> f "%s connection failed %a" pre TCP.pp_error e) ; return_unit
-    | Ok tcp  ->
-      let trace s = log (Sexplib.Sexp.to_string s) in
-      TLS.client_of_flow ~trace cfg tcp >>= function
-      | Error e -> Logs.warn (fun f -> f "%s TLS failed %a" pre TLS.pp_write_error e) ; TCP.close tcp
-      | Ok tls -> log "TLS ok" ; f tls >>= fun _ -> TLS.close tls
+    | Error e ->
+      Metrics.add pinata_stats (fun x -> x) (fun d -> d (tag ^ " tcp failed"));
+      Logs.warn (fun f -> f "[%s] connection failed %a" tag TCP.pp_error e);
+      Lwt.return_unit
+    | Ok tcp ->
+      Metrics.add pinata_stats (fun x -> x) (fun d -> d (tag ^ " tcp succeeded"));
+      TLS.client_of_flow ~trace:(trace_out tag) cfg tcp >>= function
+      | Error e ->
+        Metrics.add pinata_stats (fun x -> x) (fun d -> d (tag ^ " tls failed"));
+        Logs.warn (fun f -> f "[%s] TLS client failed %a" tag TLS.pp_write_error e);
+        TCP.close tcp
+      | Ok tls ->
+        Metrics.add pinata_stats (fun x -> x) (fun d -> d (tag ^ " tls succeeded"));
+        f tls >>= fun _ ->
+        TLS.close tls
 
   let h_as_server secret cfg =
-    tls_accept ~trace:true ~tag:"server" cfg
+    tls_accept ~trace:true ~tag:"tls-server" cfg
       ~f:(fun tls -> TLS.write tls secret)
 
   let h_as_client stack secret cfg tcp =
-    let (ip, _) as addr = TCP.dst tcp in
-    let tag = "client" in
-    let pre = prefix tag addr in
-    log pre "received TCP" ;
+    let ip, _ = TCP.dst tcp in
     TCP.close tcp >>= fun () ->
-    tls_connect ~tag stack cfg (ip, 40001) ~f:(fun tls -> TLS.write tls secret)
+    tls_connect ~tag:"tls-client" stack cfg (ip, 40001)
+      ~f:(fun tls -> TLS.write tls secret)
 
   let h_as_rev_client secret cfg tcp =
-    let pre     = prefix "rev-client" (TCP.dst tcp) in
-    let log     = log pre in
-    let trace s = log (Sexplib.Sexp.to_string s) in
+    let tag = "tls-rev-client" in
+    let trace = trace_out tag in
     TLS.client_of_flow ~trace cfg tcp >>= function
-    | Error e -> Logs.warn (fun f -> f "%s TLS failed %a" pre TLS.pp_write_error e) ; TCP.close tcp
-    | Ok tls -> log "TLS ok" ; TLS.write tls secret >>= fun _ -> TLS.close tls
+    | Error e ->
+      Metrics.add pinata_stats (fun x -> x) (fun d -> d (tag ^ " failed"));
+      Logs.warn (fun f -> f "TLS rev-client failed %a" TLS.pp_write_error e);
+      TCP.close tcp
+    | Ok tls ->
+      Metrics.add pinata_stats (fun x -> x) (fun d -> d (tag ^ " succeeded"));
+      TLS.write tls secret >>= fun _ ->
+      TLS.close tls
 
   let http_header ~status xs =
     let headers = List.map (fun (k, v) -> k ^ ": " ^ v) xs in
@@ -70,12 +77,12 @@ struct
         ("Connection", "close") ]
 
   let h_notice data tcp =
-    let pre = prefix "web" (TCP.dst tcp) in
-    let log = log pre in
+    Metrics.add pinata_stats (fun x -> x) (fun d -> d "web");
     let len = Cstruct.len data in
-    TCP.writev tcp [ header len; data ] >>= function
-    | Error e -> Logs.warn (fun f -> f "%s tcp error %a" pre TCP.pp_write_error e) ; TCP.close tcp
-    | Ok ()   -> log "responded" ; TCP.close tcp
+    (TCP.writev tcp [ header len; data ] >|= function
+      | Error e -> Logs.warn (fun f -> f "tcp error %a" TCP.pp_write_error e)
+      | Ok () -> ()) >>= fun () ->
+    TCP.close tcp
 
   let h_as_web_server data cfg =
     let len = Cstruct.len data in
@@ -132,8 +139,8 @@ struct
      generate_cert ~ca now "BTC Piñata client" (extensions `Client_auth),
      generate_cert ~ca now "ownme.ipredator.se" (extensions `Server_auth))
 
-  let tls_init clock =
-    let now = Ptime.v (CLOCK.now_d_ps clock) in
+  let tls_init () =
+    let now = Ptime.v (CLOCK.now_d_ps ()) in
     let cacert, s_cert, c_cert, w_cert = generate_certs now in
     let to_tls (key, cert) = `Single ([cert;cacert], match key with `RSA k -> k) in
     let authenticator = X509.Authenticator.chain_of_trust ~time:now [cacert] in
@@ -145,13 +152,10 @@ struct
       server ~certificates:(to_tls w_cert) ()
     )
 
-  let start stack clock _ info =
-    Logs.info (fun m -> m "used packages: %a"
-                  Fmt.(Dump.list @@ pair ~sep:(unit ".") string string)
-                  info.Mirage_info.packages) ;
-    Logs.info (fun m -> m "used libraries: %a"
-                  Fmt.(Dump.list string) info.Mirage_info.libraries) ;
-    let ca_root, s_cfg, c_cfg, w_cfg = tls_init clock in
+  let start stack _clock _ info =
+    List.iter (fun (p, v) -> Logs.app (fun m -> m "used package: %s %s" p v))
+      info.Mirage_info.packages;
+    let ca_root, s_cfg, c_cfg, w_cfg = tls_init () in
     let secret = Cstruct.of_string (Key_gen.secret ()) in
     let web_data = Page.render ca_root in
     S.listen_tcpv4 stack ~port:80    (h_notice web_data) ;
