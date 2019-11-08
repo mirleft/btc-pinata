@@ -10,8 +10,6 @@ let test_k =
   let doc = Key.Arg.info ~doc:"test mode" ["test"] in
   Key.(create "test" Arg.(flag doc))
 
-let logger = syslog_udp ~config:(syslog_config ~truncate:1484 "pinata") net
-
 let () =
   let keys = Key.([ abstract secret_k ; abstract test_k ])
   and packages = [
@@ -22,7 +20,7 @@ let () =
   in
   register "btc-piñata" [
     foreign
-      ~deps:[ abstract nocrypto ; abstract logger ; abstract app_info ]
+      ~deps:[ abstract nocrypto ; abstract app_info ]
       ~keys
       ~packages
       "Unikernel.Main"

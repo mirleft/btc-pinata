@@ -1,4 +1,52 @@
-B _build/**
-
-PKG cstruct lwt tls tls.mirage tyxml tcpip mirage mirage-types
-PKG ptime logs-syslog logs-syslog.mirage x509
+EXCLUDE_QUERY_DIR
+B /usr/home/hannes/.opam/easy-mirage/lib/astring
+B /usr/home/hannes/.opam/easy-mirage/lib/bos
+B /usr/home/hannes/.opam/easy-mirage/lib/bytes
+B /usr/home/hannes/.opam/easy-mirage/lib/cmdliner
+B /usr/home/hannes/.opam/easy-mirage/lib/domain-name
+B /usr/home/hannes/.opam/easy-mirage/lib/fmt
+B /usr/home/hannes/.opam/easy-mirage/lib/fpath
+B /usr/home/hannes/.opam/easy-mirage/lib/functoria
+B /usr/home/hannes/.opam/easy-mirage/lib/functoria-runtime
+B /usr/home/hannes/.opam/easy-mirage/lib/functoria/app
+B /usr/home/hannes/.opam/easy-mirage/lib/ipaddr
+B /usr/home/hannes/.opam/easy-mirage/lib/logs
+B /usr/home/hannes/.opam/easy-mirage/lib/lwt
+B /usr/home/hannes/.opam/easy-mirage/lib/macaddr
+B /usr/home/hannes/.opam/easy-mirage/lib/mirage
+B /usr/home/hannes/.opam/easy-mirage/lib/mirage-runtime
+B /usr/home/hannes/.opam/easy-mirage/lib/ocaml
+B /usr/home/hannes/.opam/easy-mirage/lib/ocamlgraph
+B /usr/home/hannes/.opam/easy-mirage/lib/ptime
+B /usr/home/hannes/.opam/easy-mirage/lib/ptime/os
+B /usr/home/hannes/.opam/easy-mirage/lib/result
+B /usr/home/hannes/.opam/easy-mirage/lib/rresult
+B /usr/home/hannes/.opam/easy-mirage/lib/seq
+B /usr/home/hannes/.opam/easy-mirage/lib/stdlib-shims
+B _build/default/.config.eobjs/byte
+S /usr/home/hannes/.opam/easy-mirage/lib/astring
+S /usr/home/hannes/.opam/easy-mirage/lib/bos
+S /usr/home/hannes/.opam/easy-mirage/lib/bytes
+S /usr/home/hannes/.opam/easy-mirage/lib/cmdliner
+S /usr/home/hannes/.opam/easy-mirage/lib/domain-name
+S /usr/home/hannes/.opam/easy-mirage/lib/fmt
+S /usr/home/hannes/.opam/easy-mirage/lib/fpath
+S /usr/home/hannes/.opam/easy-mirage/lib/functoria
+S /usr/home/hannes/.opam/easy-mirage/lib/functoria-runtime
+S /usr/home/hannes/.opam/easy-mirage/lib/functoria/app
+S /usr/home/hannes/.opam/easy-mirage/lib/ipaddr
+S /usr/home/hannes/.opam/easy-mirage/lib/logs
+S /usr/home/hannes/.opam/easy-mirage/lib/lwt
+S /usr/home/hannes/.opam/easy-mirage/lib/macaddr
+S /usr/home/hannes/.opam/easy-mirage/lib/mirage
+S /usr/home/hannes/.opam/easy-mirage/lib/mirage-runtime
+S /usr/home/hannes/.opam/easy-mirage/lib/ocaml
+S /usr/home/hannes/.opam/easy-mirage/lib/ocamlgraph
+S /usr/home/hannes/.opam/easy-mirage/lib/ptime
+S /usr/home/hannes/.opam/easy-mirage/lib/ptime/os
+S /usr/home/hannes/.opam/easy-mirage/lib/result
+S /usr/home/hannes/.opam/easy-mirage/lib/rresult
+S /usr/home/hannes/.opam/easy-mirage/lib/seq
+S /usr/home/hannes/.opam/easy-mirage/lib/stdlib-shims
+S .
+FLG -w @1..3@5..28@30..39@43@46..47@49..57@61..62-40 -strict-sequence -strict-formats -short-paths -keep-locs

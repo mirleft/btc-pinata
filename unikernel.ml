@@ -90,53 +90,62 @@ struct
   let rsa_key ?(bits = 4096) () =
     `RSA (Nocrypto.Rsa.generate bits)
 
-  let generate_ca now () =
+  let generate_cert ?ca now cn extensions =
     let valid_from, valid_until = valid 365 now
-    and cakey  = rsa_key ~bits:4096 ()
-    and caname = [`CN "BTC Piñata CA"] in
-    let req        = X509.CA.request caname cakey in
-    let extensions = [(true, `Basic_constraints (true, Some 1));
-                      (true, `Key_usage [`Key_cert_sign])]
+    and key = rsa_key ()
     in
-    (cakey,
-     X509.CA.sign req ~valid_from ~valid_until ~extensions cakey caname)
+    let name =
+      [ X509.Distinguished_name.(Relative_distinguished_name.singleton (CN cn)) ]
+    in
+    let req = X509.Signing_request.create name key in
+    let issuer, cakey = match ca with
+      | None -> name, key
+      | Some (k, cert) -> X509.Certificate.subject cert, k
+    in
+    let cert =
+      X509.Signing_request.sign req ~valid_from ~valid_until ~extensions
+        cakey issuer
+    in
+    if Key_gen.test () then
+      Logs.info (fun m -> m "generated key and cert %a:\n%s\n%s"
+                    X509.Certificate.pp cert
+                    (X509.Private_key.encode_pem key |> Cstruct.to_string)
+                    (X509.Certificate.encode_pem cert |> Cstruct.to_string));
+    key, cert
 
-  let generate_certs now (cakey, cacert) () =
-    let valid_from, valid_until = valid 365 now
-    and caname = X509.subject cacert in
-    let gen_cert name extensions =
-      let key  = rsa_key () in
-      let req  = X509.CA.request [`CN name] key in
-      let cert = X509.CA.sign req ~valid_from ~valid_until ~extensions cakey caname in
-      ([cert; cacert], match key with `RSA k -> k)
-    and extensions eku =
-      [(true, `Key_usage [ `Digital_signature ; `Key_encipherment ]);
-       (true, `Basic_constraints (false, None)) ;
-       (true, `Ext_key_usage [eku])]
+  let generate_certs now =
+    let cakey, cacert =
+      let extensions =
+        X509.Extension.(add Basic_constraints (true, (true, Some 1))
+                          (singleton Key_usage (true, [`Key_cert_sign])))
+      in
+      generate_cert now "BTC Piñata CA" extensions
     in
+    let extensions eku =
+      X509.Extension.(add Basic_constraints (true, (false, None))
+                        (add Key_usage (true, [ `Digital_signature ; `Key_encipherment ])
+                           (singleton Ext_key_usage (true, [ eku ]))))
+    in
+    let ca = cakey, cacert in
     (cacert,
-     gen_cert "BTC Piñata server" (extensions `Server_auth),
-     gen_cert "BTC Piñata client" (extensions `Client_auth),
-     gen_cert "ownme.ipredator.se" (extensions `Server_auth))
+     generate_cert ~ca now "BTC Piñata server" (extensions `Server_auth),
+     generate_cert ~ca now "BTC Piñata client" (extensions `Client_auth),
+     generate_cert ~ca now "ownme.ipredator.se" (extensions `Server_auth))
 
   let tls_init clock =
     let now = Ptime.v (CLOCK.now_d_ps clock) in
-    let cacert, s_cert, c_cert, w_cert =
-      if Key_gen.test () then
-        generate_certs now Test.ca ()
-      else
-        generate_certs now (generate_ca now ()) ()
-    in
+    let cacert, s_cert, c_cert, w_cert = generate_certs now in
+    let to_tls (key, cert) = `Single ([cert;cacert], match key with `RSA k -> k) in
     let authenticator = X509.Authenticator.chain_of_trust ~time:now [cacert] in
-    let cacert = X509.Encoding.Pem.Certificate.to_pem_cstruct1 cacert in
+    let cacert = X509.Certificate.encode_pem cacert in
     Tls.Config.(
       cacert,
-      server ~authenticator ~certificates:(`Single s_cert) (),
-      client ~authenticator ~certificates:(`Single c_cert) (),
-      server ~certificates:(`Single w_cert) ()
+      server ~authenticator ~certificates:(to_tls s_cert) (),
+      client ~authenticator ~certificates:(to_tls c_cert) (),
+      server ~certificates:(to_tls w_cert) ()
     )
 
-  let start stack clock _ _ info =
+  let start stack clock _ info =
     Logs.info (fun m -> m "used packages: %a"
                   Fmt.(Dump.list @@ pair ~sep:(unit ".") string string)
                   info.Mirage_info.packages) ;
