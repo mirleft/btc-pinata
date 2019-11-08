@@ -10,14 +10,32 @@ let test_k =
   let doc = Key.Arg.info ~doc:"test mode" ["test"] in
   Key.(create "test" Arg.(flag doc))
 
+let monitor =
+  let doc = Key.Arg.info ~doc:"monitor host IP" ["monitor"] in
+  Key.(create "monitor" Arg.(opt ipv4_address Ipaddr.V4.unspecified doc))
+
+let syslog =
+  let doc = Key.Arg.info ~doc:"syslog host IP" ["syslog"] in
+  Key.(create "syslog" Arg.(opt ipv4_address Ipaddr.V4.unspecified doc))
+
+let name =
+  let doc = Key.Arg.info ~doc:"Name of the unikernel" ["name"] in
+  Key.(create "name" Arg.(opt string "pinata" doc))
+
+let management_stack = generic_stackv4 ~group:"management" (netif ~group:"management" "management")
+
 let () =
-  let keys = Key.([ abstract secret_k ; abstract test_k ])
+  let keys = [
+    Key.abstract secret_k ; Key.abstract test_k ;
+    Key.abstract name ; Key.abstract syslog ; Key.abstract monitor
+  ]
   and packages = [
     package ~sublibs:["mirage"] "tls";
     package "tyxml";
     package "logs";
     package "ptime";
     package "monitoring-experiments";
+    package ~sublibs:["mirage"] "logs-syslog";
   ]
   in
   register "btc-piñata" [
@@ -26,7 +44,6 @@ let () =
       ~keys
       ~packages
       "Unikernel.Main"
-      (stackv4 @-> pclock @-> job)
-      $ net
-      $ default_posix_clock
+      (console @-> time @-> mclock @-> pclock @-> stackv4 @-> stackv4 @-> job)
+      $ default_console $ default_time $ default_monotonic_clock $ default_posix_clock $ net $ management_stack
   ]

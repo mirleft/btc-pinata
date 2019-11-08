@@ -1,8 +1,6 @@
 open Lwt.Infix
 
-module Main (S : Mirage_stack.V4) (CLOCK : Mirage_clock.PCLOCK) =
-struct
-
+module Main (C : Mirage_console.S) (T : Mirage_time.S) (M : Mirage_clock.MCLOCK) (CLOCK : Mirage_clock.PCLOCK) (S : Mirage_stack.V4) (Management : Mirage_stack.V4) = struct
   module TCP   = S.TCPV4
   module TLS   = Tls_mirage.Make (TCP)
 
@@ -152,7 +150,22 @@ struct
       server ~certificates:(to_tls w_cert) ()
     )
 
-  let start stack _clock _ info =
+  module Monitoring = Monitoring_experiments.Make(T)(Management)
+  module Syslog = Logs_syslog_mirage.Udp(C)(CLOCK)(Management)
+
+  let start c _time _mclock _pclock stack management _ info =
+    let hostname = Key_gen.name ()
+    and syslog = Key_gen.syslog ()
+    and monitor = Key_gen.monitor ()
+    in
+    if Ipaddr.V4.compare syslog Ipaddr.V4.unspecified = 0 then
+      Logs.warn (fun m -> m "no syslog specified, dumping on stdout")
+    else
+      Logs.set_reporter (Syslog.create c management syslog ~hostname ());
+    if Ipaddr.V4.compare monitor Ipaddr.V4.unspecified = 0 then
+      Logs.warn (fun m -> m "no monitor specified, not outputting statistics")
+    else
+      Monitoring.create ~hostname monitor management;
     List.iter (fun (p, v) -> Logs.app (fun m -> m "used package: %s %s" p v))
       info.Mirage_info.packages;
     let ca_root, s_cfg, c_cfg, w_cfg = tls_init () in
